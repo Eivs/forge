@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?
+  createdAt DateTime @default(now())
+  chats     Chat[]
+}
+
+model Chat {
+  id           Int       @id @default(autoincrement())
+  title        String
+  systemPrompt String?
+  temperature  Float     @default(0.7)
+  topP         Float     @default(1.0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime?
+  user         User      @relation(fields: [userId], references: [id])
+  userId       Int
+  model        Model     @relation(fields: [modelId], references: [id])
+  modelId      Int
+  messages     Message[]
+}
+
+model Message {
+  id        Int       @id @default(autoincrement())
+  role      String    @default("user") // "system", "user", "assistant"
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+  chat      Chat      @relation(fields: [chatId], references: [id])
+  chatId    Int
+}
+
+model Setting {
+  id        Int       @id @default(autoincrement())
+  key       String    @unique
+  value     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+}
+
+model Provider {
+  id         Int       @id @default(autoincrement())
+  name       String
+  baseUrl    String
+  apiKey     String
+  isActive   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime?
+  models     Model[]
+}
+
+model Model {
+  id          Int       @id @default(autoincrement())
+  name        String
+  contextSize Int       @default(4000)
+  isActive    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+  provider    Provider  @relation(fields: [providerId], references: [id])
+  providerId  Int
+  chats       Chat[]
+}

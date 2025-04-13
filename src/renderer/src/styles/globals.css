@@ -1,0 +1,209 @@
+@import "@radix-ui/themes/styles.css";
+@import "./fonts.css";
+@import "./reachat.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 背景色 */
+    --background: #f8f9fa;
+    --foreground: #1a1a1a;
+    --muted: #f1f3f5;
+    --muted-foreground: #6c757d;
+
+    /* 卡片和组件 */
+    --card: #ffffff;
+    --card-foreground: #1a1a1a;
+    --card-muted: #f1f3f5;
+
+    /* 弹出框 */
+    --popover: #ffffff;
+    --popover-foreground: #1a1a1a;
+
+    /* 主要颜色 */
+    --primary: #0066ff;
+    --primary-foreground: #ffffff;
+
+    /* 次要颜色 */
+    --secondary: #f1f3f5;
+    --secondary-foreground: #1a1a1a;
+
+    /* 强调色 */
+    --accent: #f1f3f5;
+    --accent-foreground: #1a1a1a;
+
+    /* 警告/错误色 */
+    --destructive: #ff4d4f;
+    --destructive-foreground: #ffffff;
+
+    /* 边框和输入框 */
+    --border: #e9ecef;
+    --input: #e9ecef;
+    --ring: #0066ff;
+
+    /* 消息气泡 */
+    --user-message: #e9f2ff;
+    --user-message-foreground: #1a1a1a;
+    --assistant-message: #ffffff;
+    --assistant-message-foreground: #1a1a1a;
+
+    /* 圆角 */
+    --radius: 0.5rem;
+    --radius-sm: 0.25rem;
+    --radius-lg: 0.75rem;
+    --radius-full: 9999px;
+
+    /* 阴影 */
+    --shadow: rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .dark {
+    /* 背景色 */
+    --background: #141b2d;
+    --foreground: #ffffff;
+    --muted: #1e293b;
+    --muted-foreground: #a1a1aa;
+
+    /* 卡片和组件 */
+    --card: #1e293b;
+    --card-foreground: #ffffff;
+    --card-muted: #1e293b;
+
+    /* 弹出框 */
+    --popover: #1e293b;
+    --popover-foreground: #ffffff;
+
+    /* 主要颜色 */
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+
+    /* 次要颜色 */
+    --secondary: #1e293b;
+    --secondary-foreground: #ffffff;
+
+    /* 强调色 */
+    --accent: #1e293b;
+    --accent-foreground: #ffffff;
+
+    /* 警告/错误色 */
+    --destructive: #ff4d4f;
+    --destructive-foreground: #ffffff;
+
+    /* 边框和输入框 */
+    --border: #2e3a59;
+    --input: #2e3a59;
+    --ring: #3b82f6;
+
+    /* 消息气泡 */
+    --user-message: #2e3a59;
+    --user-message-foreground: #ffffff;
+    --assistant-message: #1e293b;
+    --assistant-message-foreground: #ffffff;
+
+    /* 圆角 */
+    --radius: 0.5rem;
+    --radius-sm: 0.25rem;
+    --radius-lg: 0.75rem;
+    --radius-full: 9999px;
+
+    /* 阴影 */
+    --shadow: rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* 滚动条样式 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(155, 155, 155, 0.5);
+    border-radius: 20px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(155, 155, 155, 0.7);
+  }
+
+  /* 消息气泡样式 */
+  .user-message {
+    background-color: var(--user-message);
+    color: var(--user-message-foreground);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    margin-left: auto;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 2px var(--shadow);
+  }
+
+  .assistant-message {
+    background-color: var(--assistant-message);
+    color: var(--assistant-message-foreground);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    margin-right: auto;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 2px var(--shadow);
+  }
+
+  /* 输入框样式 */
+  .chat-input {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem 1rem;
+    box-shadow: 0 1px 3px var(--shadow);
+    transition: all 0.2s ease;
+  }
+
+  .chat-input:focus {
+    outline: none;
+    border-color: var(--ring);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  }
+
+  /* 按钮样式 */
+  .btn-primary {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+
+  /* 卡片样式 */
+  .card {
+    background-color: var(--card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 1px 3px var(--shadow);
+  }
+}
