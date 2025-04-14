@@ -18,10 +18,10 @@ export function setupMCPHandlers() {
         await mcpClient.close();
         mcpClient = null;
       }
-      
+
       // This is a placeholder. In reality, this would use the imported modules
       console.log(`Connecting to MCP server at ${url}`);
-      
+
       // Placeholder for actual implementation when packages are installed
       // mcpClient = new ModelContextProtocol({
       //   serverUrl: url,
@@ -29,14 +29,14 @@ export function setupMCPHandlers() {
       // });
       // await mcpClient.connect();
       // mcpAdapter = createMCPAdapter(mcpClient);
-      
+
       // For now, just set placeholders for testing
       mcpClient = {
         connect: async () => {},
-        close: async () => {}
+        close: async () => {},
       };
       mcpAdapter = { handlers: [] };
-      
+
       connectionStatus = 'connected';
       return true;
     } catch (error: any) {
@@ -45,7 +45,7 @@ export function setupMCPHandlers() {
       throw error;
     }
   });
-  
+
   // Disconnect from MCP server
   ipcMain.handle('mcp:disconnect', async () => {
     try {
@@ -61,33 +61,33 @@ export function setupMCPHandlers() {
       throw error;
     }
   });
-  
+
   // Check if connected to MCP server
   ipcMain.handle('mcp:isConnected', () => {
     return !!mcpClient && connectionStatus === 'connected';
   });
-  
+
   // Get MCP connection status
   ipcMain.handle('mcp:getConnectionStatus', () => {
     return connectionStatus;
   });
-  
+
   // Create an LLM that uses the MCP for context
   ipcMain.handle('mcp:createMCPModel', async (_: IpcMainInvokeEvent, modelParams: any) => {
     if (!mcpClient || !mcpAdapter) {
       throw new Error('MCP client not connected');
     }
-    
+
     try {
       // Extract model parameters - we're not using them yet in this placeholder implementation
       // but we need to extract them to satisfy TypeScript
       console.log('Creating MCP model with parameters:', modelParams);
-      
+
       // In actual implementation with packages installed:
       // import { ChatOpenAI } from '@langchain/openai';
       // const { modelName, temperature, topP } = modelParams;
       // const model = new ChatOpenAI({...}).bind({...});
-      
+
       // Just return success for now
       return { success: true };
     } catch (error: any) {

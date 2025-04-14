@@ -1,6 +1,6 @@
-@import "@radix-ui/themes/styles.css";
-@import "./fonts.css";
-@import "./reachat.css";
+@import '@radix-ui/themes/styles.css';
+@import './fonts.css';
+@import './reachat.css';
 
 @tailwind base;
 @tailwind components;
@@ -124,8 +124,18 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+    font-family:
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      'Helvetica Neue',
+      Arial,
+      sans-serif;
   }
 
   /* 滚动条样式 */

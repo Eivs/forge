@@ -1,143 +1,160 @@
-import { useState, useEffect } from 'react'
-import { useModelStore } from '../../store/modelStore'
-import { Model, Provider } from '../../store/chatStore'
-import { CompactCard, CompactCardContent, CompactCardDescription, CompactCardHeader, CompactCardTitle } from './CompactCard'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
-import { CompactSwitch } from './CompactSwitch'
-import { Plus, Trash, Edit, ArrowLeft } from 'lucide-react'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
-import { useLanguage } from '../../locales'
+import { useState, useEffect } from 'react';
+import { useModelStore } from '../../store/modelStore';
+import { Model, Provider } from '../../store/chatStore';
+import {
+  CompactCard,
+  CompactCardContent,
+  CompactCardDescription,
+  CompactCardHeader,
+  CompactCardTitle,
+} from './CompactCard';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { CompactSwitch } from './CompactSwitch';
+import { Plus, Trash, Edit, ArrowLeft } from 'lucide-react';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { useLanguage } from '../../locales';
 
 interface ProviderDetailProps {
-  provider: Provider | null
-  onBack: () => void
+  provider: Provider | null;
+  onBack: () => void;
 }
 
 const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
-  const { models, fetchModels, createModel, updateModel, deleteModel, setModelActive, updateProvider, deleteProvider, setProviderActive, fetchProviders } = useModelStore()
-  const { t } = useLanguage()
+  const {
+    models,
+    fetchModels,
+    createModel,
+    updateModel,
+    deleteModel,
+    setModelActive,
+    updateProvider,
+    deleteProvider,
+    setProviderActive,
+    fetchProviders,
+  } = useModelStore();
+  const { t } = useLanguage();
 
   // Provider editing state
-  const [isEditProviderOpen, setIsEditProviderOpen] = useState(false)
-  const [editingProvider, setEditingProvider] = useState<Provider | null>(null)
+  const [isEditProviderOpen, setIsEditProviderOpen] = useState(false);
+  const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
 
   // Model states
-  const [isAddModelOpen, setIsAddModelOpen] = useState(false)
-  const [isEditModelOpen, setIsEditModelOpen] = useState(false)
-  const [editingModel, setEditingModel] = useState<Model | null>(null)
+  const [isAddModelOpen, setIsAddModelOpen] = useState(false);
+  const [isEditModelOpen, setIsEditModelOpen] = useState(false);
+  const [editingModel, setEditingModel] = useState<Model | null>(null);
   const [newModel, setNewModel] = useState({
     name: '',
     contextSize: 4000,
-    isActive: false
-  })
+    isActive: false,
+  });
 
   // Filter models for this provider
-  const providerModels = models.filter(model => model.provider.id === provider?.id)
+  const providerModels = models.filter(model => model.provider.id === provider?.id);
 
   // Set up editing provider
   useEffect(() => {
     if (provider) {
-      setEditingProvider(provider)
+      setEditingProvider(provider);
     }
-  }, [provider])
+  }, [provider]);
 
   // Handle provider actions
   const handleEditProvider = async () => {
-    if (!editingProvider) return
+    if (!editingProvider) return;
 
     try {
-      await updateProvider(editingProvider.id, editingProvider)
-      setIsEditProviderOpen(false)
+      await updateProvider(editingProvider.id, editingProvider);
+      setIsEditProviderOpen(false);
     } catch (error) {
-      console.error('Error updating provider:', error)
+      console.error('Error updating provider:', error);
     }
-  }
+  };
 
   const handleDeleteProvider = async () => {
-    if (!provider) return
+    if (!provider) return;
 
     try {
-      await deleteProvider(provider.id)
-      onBack() // Go back to provider list after deletion
+      await deleteProvider(provider.id);
+      onBack(); // Go back to provider list after deletion
     } catch (error) {
-      console.error('Error deleting provider:', error)
+      console.error('Error deleting provider:', error);
     }
-  }
+  };
 
   const handleToggleProviderActive = async (isActive: boolean) => {
-    if (!provider) return
+    if (!provider) return;
 
     try {
-      await setProviderActive(provider.id, isActive)
-      await fetchProviders()
+      await setProviderActive(provider.id, isActive);
+      await fetchProviders();
     } catch (error) {
-      console.error('Error toggling provider active state:', error)
+      console.error('Error toggling provider active state:', error);
     }
-  }
+  };
 
   // Handle model actions
   const handleAddModel = async () => {
-    if (!provider) return
+    if (!provider) return;
 
     try {
       await createModel({
         ...newModel,
-        provider
-      })
+        provider,
+      });
       setNewModel({
         name: '',
         contextSize: 4000,
-        isActive: false
-      })
-      setIsAddModelOpen(false)
-      fetchModels() // Refresh models list
+        isActive: false,
+      });
+      setIsAddModelOpen(false);
+      fetchModels(); // Refresh models list
     } catch (error) {
-      console.error('Error adding model:', error)
+      console.error('Error adding model:', error);
     }
-  }
+  };
 
   const handleEditModel = async () => {
-    if (!editingModel || !provider) return
+    if (!editingModel || !provider) return;
 
     try {
       await updateModel(editingModel.id, {
         ...editingModel,
-        provider
-      })
-      setIsEditModelOpen(false)
-      setEditingModel(null)
-      fetchModels() // Refresh models list
+        provider,
+      });
+      setIsEditModelOpen(false);
+      setEditingModel(null);
+      fetchModels(); // Refresh models list
     } catch (error) {
-      console.error('Error updating model:', error)
+      console.error('Error updating model:', error);
     }
-  }
+  };
 
   const handleDeleteModel = async (id: number) => {
     try {
-      await deleteModel(id)
-      fetchModels() // Refresh models list
+      await deleteModel(id);
+      fetchModels(); // Refresh models list
     } catch (error) {
-      console.error('Error deleting model:', error)
+      console.error('Error deleting model:', error);
     }
-  }
+  };
 
   const handleToggleModelActive = async (id: number, isActive: boolean) => {
     try {
-      await setModelActive(id, isActive)
-      await fetchModels()
+      await setModelActive(id, isActive);
+      await fetchModels();
     } catch (error) {
-      console.error('Error toggling model active state:', error)
+      console.error('Error toggling model active state:', error);
     }
-  }
+  };
 
   if (!provider) {
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground">{t.provider.selectProvider}</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -179,7 +196,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
             </div>
           </div>
           <CompactCardDescription>
-            {provider.isActive ? '已启用' : '已禁用'}
+            {provider.isActive ? t.common.enabled : t.common.disabled}
           </CompactCardDescription>
         </CompactCardHeader>
         <CompactCardContent>
@@ -190,7 +207,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">API Key:</span>
-              <span>{provider.apiKey ? "**********" : t.provider.notSet}</span>
+              <span>{provider.apiKey ? '**********' : t.provider.notSet}</span>
             </div>
           </div>
         </CompactCardContent>
@@ -200,7 +217,12 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
       <div className="space-y-2">
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-medium">{t.model.model}</h3>
-          <Button size="sm" variant="outline" onClick={() => setIsAddModelOpen(true)} className="h-7 text-xs px-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsAddModelOpen(true)}
+            className="h-7 text-xs px-2"
+          >
             <Plus className="mr-1 h-3 w-3" />
             {t.model.addModel}
           </Button>
@@ -220,15 +242,15 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                     <div className="flex items-center space-x-1">
                       <CompactSwitch
                         checked={model.isActive}
-                        onCheckedChange={(checked) => handleToggleModelActive(model.id, checked)}
+                        onCheckedChange={checked => handleToggleModelActive(model.id, checked)}
                       />
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0"
                         onClick={() => {
-                          setEditingModel(model)
-                          setIsEditModelOpen(true)
+                          setEditingModel(model);
+                          setIsEditModelOpen(true);
                         }}
                       >
                         <Edit className="h-3 w-3" />
@@ -244,13 +266,13 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                     </div>
                   </div>
                   <CompactCardDescription>
-                    {model.isActive ? '已启用' : '已禁用'}
+                    {model.isActive ? t.common.enabled : t.common.disabled}
                   </CompactCardDescription>
                 </CompactCardHeader>
                 <CompactCardContent>
                   <div className="text-xs">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">上下文大小:</span>
+                      <span className="text-muted-foreground">{model.contextSize}:</span>
                       <span>{model.contextSize.toLocaleString()} tokens</span>
                     </div>
                   </div>
@@ -274,7 +296,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                 <Input
                   id="edit-name"
                   value={editingProvider.name}
-                  onChange={(e) => setEditingProvider({ ...editingProvider, name: e.target.value })}
+                  onChange={e => setEditingProvider({ ...editingProvider, name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -282,7 +304,9 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                 <Input
                   id="edit-baseUrl"
                   value={editingProvider.baseUrl}
-                  onChange={(e) => setEditingProvider({ ...editingProvider, baseUrl: e.target.value })}
+                  onChange={e =>
+                    setEditingProvider({ ...editingProvider, baseUrl: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -291,7 +315,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                   id="edit-apiKey"
                   type="password"
                   placeholder={t.provider.enterNewApiKey}
-                  onChange={(e) => setEditingProvider({ ...editingProvider, apiKey: e.target.value })}
+                  onChange={e => setEditingProvider({ ...editingProvider, apiKey: e.target.value })}
                 />
               </div>
             </div>
@@ -300,9 +324,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
             <Button variant="outline" onClick={() => setIsEditProviderOpen(false)}>
               {t.common.cancel}
             </Button>
-            <Button onClick={handleEditProvider}>
-              {t.common.save}
-            </Button>
+            <Button onClick={handleEditProvider}>{t.common.save}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -319,7 +341,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
               <Input
                 id="name"
                 value={newModel.name}
-                onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
+                onChange={e => setNewModel({ ...newModel, name: e.target.value })}
                 placeholder="e.g. gpt-4-turbo"
               />
             </div>
@@ -329,14 +351,14 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                 id="contextSize"
                 type="number"
                 value={newModel.contextSize}
-                onChange={(e) => setNewModel({ ...newModel, contextSize: parseInt(e.target.value) })}
+                onChange={e => setNewModel({ ...newModel, contextSize: parseInt(e.target.value) })}
               />
             </div>
             <div className="flex items-center space-x-2">
               <CompactSwitch
                 id="isActive"
                 checked={newModel.isActive}
-                onCheckedChange={(checked) => setNewModel({ ...newModel, isActive: checked })}
+                onCheckedChange={checked => setNewModel({ ...newModel, isActive: checked })}
               />
               <Label htmlFor="isActive">{t.model.enable}</Label>
             </div>
@@ -345,9 +367,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
             <Button variant="outline" onClick={() => setIsAddModelOpen(false)}>
               {t.common.cancel}
             </Button>
-            <Button onClick={handleAddModel}>
-              {t.common.add}
-            </Button>
+            <Button onClick={handleAddModel}>{t.common.add}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -365,7 +385,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                 <Input
                   id="edit-name"
                   value={editingModel.name}
-                  onChange={(e) => setEditingModel({ ...editingModel, name: e.target.value })}
+                  onChange={e => setEditingModel({ ...editingModel, name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -374,7 +394,9 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                   id="edit-contextSize"
                   type="number"
                   value={editingModel.contextSize}
-                  onChange={(e) => setEditingModel({ ...editingModel, contextSize: parseInt(e.target.value) })}
+                  onChange={e =>
+                    setEditingModel({ ...editingModel, contextSize: parseInt(e.target.value) })
+                  }
                 />
               </div>
             </div>
@@ -383,14 +405,12 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
             <Button variant="outline" onClick={() => setIsEditModelOpen(false)}>
               {t.common.cancel}
             </Button>
-            <Button onClick={handleEditModel}>
-              {t.common.save}
-            </Button>
+            <Button onClick={handleEditModel}>{t.common.save}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
+  );
+};
 
-export default ProviderDetail
+export default ProviderDetail;

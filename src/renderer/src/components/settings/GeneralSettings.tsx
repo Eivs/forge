@@ -1,22 +1,27 @@
-
-import { useTheme } from '../theme-provider'
-import { CompactCard, CompactCardContent, CompactCardDescription, CompactCardHeader, CompactCardTitle } from './CompactCard'
-import { Label } from '../ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import { useLanguage, Language } from '../../locales'
+import { useTheme } from '../theme-provider';
+import {
+  CompactCard,
+  CompactCardContent,
+  CompactCardDescription,
+  CompactCardHeader,
+  CompactCardTitle,
+} from './CompactCard';
+import { Label } from '../ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useLanguage, Language } from '../../locales';
 
 const GeneralSettings = () => {
-  const { theme, setTheme } = useTheme()
-  const { language, setLanguage, t } = useLanguage()
+  const { theme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
 
   const handleThemeChange = (value: string) => {
-    setTheme(value as 'light' | 'dark' | 'system')
-    window.electron.settings.set('theme', value)
-  }
+    setTheme(value as 'light' | 'dark' | 'system');
+    window.electron.settings.set('theme', value);
+  };
 
   const handleLanguageChange = (value: Language) => {
-    setLanguage(value)
-  }
+    setLanguage(value);
+  };
 
   return (
     <div className="space-y-3">
@@ -29,7 +34,9 @@ const GeneralSettings = () => {
         </CompactCardHeader>
         <CompactCardContent className="space-y-3">
           <div className="space-y-1">
-            <Label htmlFor="theme" className="text-xs">{t.settings.theme}</Label>
+            <Label htmlFor="theme" className="text-xs">
+              {t.settings.theme}
+            </Label>
             <Select value={theme} onValueChange={handleThemeChange}>
               <SelectTrigger id="theme" className="h-8 text-xs">
                 <SelectValue placeholder={t.settings.selectTheme} />
@@ -53,7 +60,9 @@ const GeneralSettings = () => {
         </CompactCardHeader>
         <CompactCardContent>
           <div className="space-y-1">
-            <Label htmlFor="language" className="text-xs">{t.settings.language}</Label>
+            <Label htmlFor="language" className="text-xs">
+              {t.settings.language}
+            </Label>
             <Select value={language} onValueChange={handleLanguageChange}>
               <SelectTrigger id="language" className="h-8 text-xs">
                 <SelectValue placeholder={t.settings.selectLanguage} />
@@ -67,7 +76,7 @@ const GeneralSettings = () => {
         </CompactCardContent>
       </CompactCard>
     </div>
-  )
-}
+  );
+};
 
-export default GeneralSettings
+export default GeneralSettings;

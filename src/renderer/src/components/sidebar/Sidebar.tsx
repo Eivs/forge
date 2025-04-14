@@ -1,50 +1,50 @@
-import { useState, useEffect } from 'react'
-import { useTheme } from '../theme-provider'
-import { useChatStore } from '../../store/chatStore'
-import { useModelStore } from '../../store/modelStore'
-import ChatList from './ChatList'
-import { Button } from '../ui/button'
-import { Settings, Plus, Sun, Moon, MonitorSmartphone } from 'lucide-react'
-import { Model } from '../../store/chatStore'
-import SettingsDialog from '../settings/SettingsDialog'
-import { useLanguage } from '../../locales'
+import { useState, useEffect } from 'react';
+import { useTheme } from '../theme-provider';
+import { useChatStore } from '../../store/chatStore';
+import { useModelStore } from '../../store/modelStore';
+import ChatList from './ChatList';
+import { Button } from '../ui/button';
+import { Settings, Plus, Sun, Moon, MonitorSmartphone } from 'lucide-react';
+import { Model } from '../../store/chatStore';
+import SettingsDialog from '../settings/SettingsDialog';
+import { useLanguage } from '../../locales';
 
 const Sidebar = () => {
-  const { theme, setTheme } = useTheme()
-  const { createChat } = useChatStore()
-  const { models, fetchModels } = useModelStore()
-  const { t } = useLanguage()
-  const [activeModel, setActiveModel] = useState<Model | null>(null)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const { theme, setTheme } = useTheme();
+  const { createChat } = useChatStore();
+  const { models, fetchModels } = useModelStore();
+  const { t } = useLanguage();
+  const [activeModel, setActiveModel] = useState<Model | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Initial model loading
   useEffect(() => {
-    fetchModels()
-  }, [])
+    fetchModels();
+  }, []);
 
   // When the model list updates, set the active model
   useEffect(() => {
-    const activeModels = models.filter(model => model.isActive)
+    const activeModels = models.filter(model => model.isActive);
     if (activeModels.length > 0) {
-      setActiveModel(activeModels[0])
+      setActiveModel(activeModels[0]);
     }
-  }, [models])
+  }, [models]);
 
   const handleNewChat = async () => {
-    if (!activeModel) return
+    if (!activeModel) return;
 
     await createChat({
       title: t.chat.newChat,
       systemPrompt: '',
       temperature: 0.7,
       topP: 1.0,
-      model: activeModel
-    })
-  }
+      model: activeModel,
+    });
+  };
 
   const handleThemeToggle = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light')
-  }
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
 
   return (
     <div className="flex flex-col h-full w-64 border-r border-border bg-card shadow-md">
@@ -91,13 +91,10 @@ const Sidebar = () => {
           <Settings size={20} />
         </Button>
 
-        <SettingsDialog
-          open={isSettingsOpen}
-          onOpenChange={setIsSettingsOpen}
-        />
+        <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Sidebar
+export default Sidebar;

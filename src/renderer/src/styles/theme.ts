@@ -6,34 +6,34 @@ export const themeConfig = {
     foreground: '#1a1a1a',
     muted: '#6c757d',
     'muted-foreground': '#6c757d',
-    
+
     // 卡片和组件
     card: '#ffffff',
     'card-foreground': '#1a1a1a',
     'card-muted': '#f1f3f5',
-    
+
     // 主要颜色
     primary: '#0066ff',
     'primary-foreground': '#ffffff',
-    
+
     // 次要颜色
     secondary: '#f1f3f5',
     'secondary-foreground': '#1a1a1a',
-    
+
     // 强调色
     accent: '#f1f3f5',
     'accent-foreground': '#1a1a1a',
-    
+
     // 边框
     border: '#e9ecef',
     input: '#e9ecef',
-    
+
     // 消息气泡
     'user-message': '#e9f2ff',
     'user-message-foreground': '#1a1a1a',
     'assistant-message': '#ffffff',
     'assistant-message-foreground': '#1a1a1a',
-    
+
     // 阴影
     shadow: 'rgba(0, 0, 0, 0.05)',
   },
@@ -43,34 +43,34 @@ export const themeConfig = {
     foreground: '#ffffff',
     muted: '#a1a1aa',
     'muted-foreground': '#a1a1aa',
-    
+
     // 卡片和组件
     card: '#1e293b',
     'card-foreground': '#ffffff',
     'card-muted': '#1e293b',
-    
+
     // 主要颜色
     primary: '#3b82f6',
     'primary-foreground': '#ffffff',
-    
+
     // 次要颜色
     secondary: '#1e293b',
     'secondary-foreground': '#ffffff',
-    
+
     // 强调色
     accent: '#1e293b',
     'accent-foreground': '#ffffff',
-    
+
     // 边框
     border: '#2e3a59',
     input: '#2e3a59',
-    
+
     // 消息气泡
     'user-message': '#2e3a59',
     'user-message-foreground': '#ffffff',
     'assistant-message': '#1e293b',
     'assistant-message-foreground': '#ffffff',
-    
+
     // 阴影
     shadow: 'rgba(0, 0, 0, 0.3)',
   },

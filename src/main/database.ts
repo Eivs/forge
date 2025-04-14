@@ -46,8 +46,8 @@ async function initializeDefaultSettings(prisma: PrismaClient) {
     defaultUser = await prisma.user.create({
       data: {
         name: 'Default User',
-        email: 'user@example.com'
-      }
+        email: 'user@example.com',
+      },
     });
 
     console.log('Default user has been created');
@@ -63,24 +63,24 @@ async function initializeDefaultSettings(prisma: PrismaClient) {
     await prisma.setting.create({
       data: {
         key: 'theme',
-        value: 'light'
-      }
+        value: 'light',
+      },
     });
 
     // 创建默认语言设置
     await prisma.setting.create({
       data: {
         key: 'language',
-        value: 'en'
-      }
+        value: 'en',
+      },
     });
 
     // 创建默认用户设置
     await prisma.setting.create({
       data: {
         key: 'defaultUserId',
-        value: defaultUser.id.toString()
-      }
+        value: defaultUser.id.toString(),
+      },
     });
 
     console.log('Default settings have been initialized');
@@ -97,33 +97,33 @@ async function initializeDefaultSettings(prisma: PrismaClient) {
           name: 'DeepSeek',
           baseUrl: 'https://api.deepseek.com/v1',
           apiKey: '',
-          isActive: true
+          isActive: true,
         },
         {
           name: 'CoresHub',
           baseUrl: 'https://openapi.coreshub.cn/v1',
           apiKey: '',
-          isActive: true
+          isActive: true,
         },
         {
           name: 'OpenAI',
           baseUrl: 'https://api.openai.com/v1',
           apiKey: '',
-          isActive: false
+          isActive: false,
         },
         {
           name: 'Anthropic',
           baseUrl: 'https://api.anthropic.com/v1',
           apiKey: '',
-          isActive: false
+          isActive: false,
         },
         {
           name: 'Google',
           baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
           apiKey: '',
-          isActive: false
+          isActive: false,
         },
-      ]
+      ],
     });
 
     console.log('Default providers have been initialized');
@@ -145,21 +145,21 @@ async function initializeDefaultSettings(prisma: PrismaClient) {
             name: 'gpt-4-turbo',
             providerId: openAIProvider.id,
             contextSize: 128000,
-            isActive: false
+            isActive: false,
           },
           {
             name: 'gpt-4o',
             providerId: openAIProvider.id,
             contextSize: 128000,
-            isActive: false
+            isActive: false,
           },
           {
             name: 'gpt-3.5-turbo',
             providerId: openAIProvider.id,
             contextSize: 16000,
-            isActive: false
-          }
-        ]
+            isActive: false,
+          },
+        ],
       });
     }
 
@@ -170,21 +170,21 @@ async function initializeDefaultSettings(prisma: PrismaClient) {
             name: 'claude-3-haiku',
             providerId: anthropicProvider.id,
             contextSize: 200000,
-            isActive: false
+            isActive: false,
           },
           {
             name: 'claude-3-sonnet',
             providerId: anthropicProvider.id,
             contextSize: 200000,
-            isActive: false
+            isActive: false,
           },
           {
             name: 'claude-3-opus',
             providerId: anthropicProvider.id,
             contextSize: 200000,
-            isActive: false
-          }
-        ]
+            isActive: false,
+          },
+        ],
       });
     }
 
@@ -195,15 +195,15 @@ async function initializeDefaultSettings(prisma: PrismaClient) {
             name: 'gemini-pro',
             providerId: googleProvider.id,
             contextSize: 32000,
-            isActive: false
+            isActive: false,
           },
           {
             name: 'gemini-ultra',
             providerId: googleProvider.id,
             contextSize: 32000,
-            isActive: false
-          }
-        ]
+            isActive: false,
+          },
+        ],
       });
     }
 
@@ -214,15 +214,15 @@ async function initializeDefaultSettings(prisma: PrismaClient) {
             name: 'deepseek-chat',
             providerId: deepSeekProvider.id,
             contextSize: 32000,
-            isActive: true
+            isActive: true,
           },
           {
             name: 'deepseek-reasoner',
             providerId: deepSeekProvider.id,
             contextSize: 32000,
-            isActive: true
-          }
-        ]
+            isActive: true,
+          },
+        ],
       });
     }
 

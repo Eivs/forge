@@ -6,6 +6,8 @@ export default {
     delete: 'Delete',
     edit: 'Edit',
     add: 'Add',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
     saving: 'Saving...',
     loading: 'Loading...',
     confirm: 'Confirm',
@@ -48,9 +50,11 @@ export default {
     systemPrompt: 'System Prompt',
     enterSystemPrompt: 'Enter system prompt...',
     temperature: 'Temperature',
-    temperatureDescription: 'Lower values make output more deterministic, higher values make output more random',
+    temperatureDescription:
+      'Lower values make output more deterministic, higher values make output more random',
     topP: 'Top P',
-    topPDescription: 'Controls the vocabulary range the model considers, lower values make output more focused',
+    topPDescription:
+      'Controls the vocabulary range the model considers, lower values make output more focused',
     noModelsConfigured: 'No models configured',
     addModel: 'Add Model',
     editModel: 'Edit Model',

@@ -16,14 +16,14 @@ export function setupAPIHandlers() {
       include: {
         model: {
           include: {
-            provider: true
-          }
+            provider: true,
+          },
         },
-        messages: true
+        messages: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: 'desc',
+      },
     });
   });
 
@@ -34,11 +34,11 @@ export function setupAPIHandlers() {
       include: {
         model: {
           include: {
-            provider: true
-          }
+            provider: true,
+          },
         },
-        messages: true
-      }
+        messages: true,
+      },
     });
   });
 
@@ -54,7 +54,9 @@ export function setupAPIHandlers() {
     // 从设置中获取默认用户 ID 或使用第一个用户
     let userId = data.user?.id;
     if (!userId) {
-      const defaultUserIdSetting = await prisma.setting.findUnique({ where: { key: 'defaultUserId' } });
+      const defaultUserIdSetting = await prisma.setting.findUnique({
+        where: { key: 'defaultUserId' },
+      });
       if (defaultUserIdSetting) {
         userId = parseInt(defaultUserIdSetting.value);
       } else {
@@ -76,7 +78,7 @@ export function setupAPIHandlers() {
         topP: data.topP || 1.0,
         userId: userId,
         modelId: model.id,
-      }
+      },
     });
 
     // 如果提供了系统提示，则添加系统消息
@@ -85,8 +87,8 @@ export function setupAPIHandlers() {
         data: {
           role: 'system',
           content: data.systemPrompt,
-          chatId: chat.id
-        }
+          chatId: chat.id,
+        },
       });
     }
 
@@ -96,11 +98,11 @@ export function setupAPIHandlers() {
       include: {
         model: {
           include: {
-            provider: true
-          }
+            provider: true,
+          },
         },
-        messages: true
-      }
+        messages: true,
+      },
     });
   });
 
@@ -113,7 +115,7 @@ export function setupAPIHandlers() {
       systemPrompt: data.systemPrompt,
       temperature: data.temperature,
       topP: data.topP,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     // 如果提供了模型 ID，则设置模型关系
@@ -123,7 +125,7 @@ export function setupAPIHandlers() {
 
     await prisma.chat.update({
       where: { id },
-      data: updateData
+      data: updateData,
     });
 
     return prisma.chat.findUnique({
@@ -131,11 +133,11 @@ export function setupAPIHandlers() {
       include: {
         model: {
           include: {
-            provider: true
-          }
+            provider: true,
+          },
         },
-        messages: true
-      }
+        messages: true,
+      },
     });
   });
 
@@ -143,15 +145,15 @@ export function setupAPIHandlers() {
     const prisma = getDatabase();
 
     // 使用事务确保数据一致性
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       // 首先删除与聊天相关的所有消息
       await tx.message.deleteMany({
-        where: { chatId: id }
+        where: { chatId: id },
       });
 
       // 然后删除聊天本身
       await tx.chat.delete({
-        where: { id }
+        where: { id },
       });
     });
   });
@@ -163,8 +165,8 @@ export function setupAPIHandlers() {
       where: { id },
       data: {
         title,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
     return prisma.chat.findUnique({
@@ -172,11 +174,11 @@ export function setupAPIHandlers() {
       include: {
         model: {
           include: {
-            provider: true
-          }
+            provider: true,
+          },
         },
-        messages: true
-      }
+        messages: true,
+      },
     });
   });
 
@@ -185,7 +187,7 @@ export function setupAPIHandlers() {
     const prisma = getDatabase();
     return prisma.message.findMany({
       where: { chatId },
-      orderBy: { createdAt: 'asc' }
+      orderBy: { createdAt: 'asc' },
     });
   });
 
@@ -203,14 +205,14 @@ export function setupAPIHandlers() {
       data: {
         role: data.role,
         content: data.content,
-        chatId: data.chatId
-      }
+        chatId: data.chatId,
+      },
     });
 
     // 更新聊天的 updatedAt
     await prisma.chat.update({
       where: { id: data.chatId },
-      data: { updatedAt: new Date() }
+      data: { updatedAt: new Date() },
     });
 
     return message;
@@ -223,8 +225,8 @@ export function setupAPIHandlers() {
       where: { id },
       data: {
         ...data,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
     return prisma.message.findUnique({ where: { id } });
@@ -240,7 +242,7 @@ export function setupAPIHandlers() {
     const prisma = getDatabase();
     return prisma.model.findMany({
       include: { provider: true },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
   });
 
@@ -249,7 +251,7 @@ export function setupAPIHandlers() {
     return prisma.model.findMany({
       where: { isActive: true },
       include: { provider: true },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
   });
 
@@ -268,13 +270,13 @@ export function setupAPIHandlers() {
         name: data.name,
         contextSize: data.contextSize || 4000,
         isActive: data.isActive || false,
-        providerId: provider.id
-      }
+        providerId: provider.id,
+      },
     });
 
     return prisma.model.findUnique({
       where: { id: model.id },
-      include: { provider: true }
+      include: { provider: true },
     });
   });
 
@@ -285,13 +287,13 @@ export function setupAPIHandlers() {
       where: { id },
       data: {
         ...data,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
     return prisma.model.findUnique({
       where: { id },
-      include: { provider: true }
+      include: { provider: true },
     });
   });
 
@@ -305,7 +307,7 @@ export function setupAPIHandlers() {
 
     const model = await prisma.model.findUnique({
       where: { id },
-      include: { provider: true }
+      include: { provider: true },
     });
 
     if (!model) {
@@ -317,23 +319,23 @@ export function setupAPIHandlers() {
       await prisma.model.updateMany({
         where: {
           providerId: model.providerId,
-          id: { not: id }
+          id: { not: id },
         },
         data: {
           isActive: false,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
     }
 
     await prisma.model.update({
       where: { id },
-      data: { isActive, updatedAt: new Date() }
+      data: { isActive, updatedAt: new Date() },
     });
 
     return prisma.model.findUnique({
       where: { id },
-      include: { provider: true }
+      include: { provider: true },
     });
   });
 
@@ -341,7 +343,7 @@ export function setupAPIHandlers() {
   ipcMain.handle('providers:getAll', async () => {
     const prisma = getDatabase();
     return prisma.provider.findMany({
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
   });
 
@@ -349,7 +351,7 @@ export function setupAPIHandlers() {
     const prisma = getDatabase();
     return prisma.provider.findMany({
       where: { isActive: true },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
   });
 
@@ -357,7 +359,7 @@ export function setupAPIHandlers() {
     const prisma = getDatabase();
 
     const provider = await prisma.provider.create({
-      data
+      data,
     });
 
     return provider;
@@ -370,8 +372,8 @@ export function setupAPIHandlers() {
       where: { id },
       data: {
         ...data,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
     return prisma.provider.findUnique({ where: { id } });
@@ -389,13 +391,13 @@ export function setupAPIHandlers() {
     if (isActive) {
       await prisma.provider.updateMany({
         where: { id: { not: id } },
-        data: { isActive: false, updatedAt: new Date() }
+        data: { isActive: false, updatedAt: new Date() },
       });
     }
 
     await prisma.provider.update({
       where: { id },
-      data: { isActive, updatedAt: new Date() }
+      data: { isActive, updatedAt: new Date() },
     });
 
     return prisma.provider.findUnique({ where: { id } });
@@ -425,13 +427,13 @@ export function setupAPIHandlers() {
         where: { key },
         data: {
           value,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
     } else {
       // 创建新设置
       await prisma.setting.create({
-        data: { key, value }
+        data: { key, value },
       });
     }
   });

@@ -1,49 +1,49 @@
-import { useRef, useEffect, useState } from 'react'
-import { useChatStore } from '../../store/chatStore'
-import ChatInput from './ChatInput'
-import MessageList from './MessageList'
-import { InfoIcon, Settings, Edit, Trash } from 'lucide-react'
-import { Button } from '../ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
-import ChatSettingsDialog from './ChatSettingsDialog'
-import { Input } from '../ui/input'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog'
-import { useLanguage } from '../../locales'
+import { useRef, useEffect, useState } from 'react';
+import { useChatStore } from '../../store/chatStore';
+import ChatInput from './ChatInput';
+import MessageList from './MessageList';
+import { InfoIcon, Settings, Edit, Trash } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import ChatSettingsDialog from './ChatSettingsDialog';
+import { Input } from '../ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
+import { useLanguage } from '../../locales';
 
 const ChatWindow = () => {
-  const { activeChat, isGenerating, abortGeneration, renameChat, deleteChat } = useChatStore()
-  const { t } = useLanguage()
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [isRenameOpen, setIsRenameOpen] = useState(false)
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  const [newTitle, setNewTitle] = useState('')
+  const { activeChat, isGenerating, abortGeneration, renameChat, deleteChat } = useChatStore();
+  const { t } = useLanguage();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
 
   useEffect(() => {
     // 当消息变化时滚动到底部
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
 
     // 当活动聊天变化时更新标题
     if (activeChat) {
-      setNewTitle(activeChat.title)
+      setNewTitle(activeChat.title);
     }
-  }, [activeChat?.messages, activeChat])
+  }, [activeChat?.messages, activeChat]);
 
   const handleRename = async () => {
     if (activeChat && newTitle.trim()) {
-      await renameChat(activeChat.id, newTitle)
-      setIsRenameOpen(false)
+      await renameChat(activeChat.id, newTitle);
+      setIsRenameOpen(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
     if (activeChat) {
-      await deleteChat(activeChat.id)
-      setIsDeleteOpen(false)
+      await deleteChat(activeChat.id);
+      setIsDeleteOpen(false);
     }
-  }
+  };
 
   if (!activeChat) {
     return (
@@ -55,7 +55,7 @@ const ChatWindow = () => {
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -70,16 +70,28 @@ const ChatWindow = () => {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground transition-colors">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground transition-colors"
+                      >
                         <InfoIcon size={16} />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent className="bg-popover text-popover-foreground p-4 rounded-md shadow-md">
                       <div className="space-y-2 text-sm">
-                        <p><strong>Model:</strong> {activeChat.model.name}</p>
-                        <p><strong>Provider:</strong> {activeChat.model.provider.name}</p>
-                        <p><strong>Temperature:</strong> {activeChat.temperature}</p>
-                        <p><strong>Top-P:</strong> {activeChat.topP}</p>
+                        <p>
+                          <strong>Model:</strong> {activeChat.model.name}
+                        </p>
+                        <p>
+                          <strong>Provider:</strong> {activeChat.model.provider.name}
+                        </p>
+                        <p>
+                          <strong>Temperature:</strong> {activeChat.temperature}
+                        </p>
+                        <p>
+                          <strong>Top-P:</strong> {activeChat.topP}
+                        </p>
                       </div>
                     </TooltipContent>
                   </Tooltip>
@@ -154,7 +166,9 @@ const ChatWindow = () => {
                 />
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsRenameOpen(false)}>{t.common.cancel}</Button>
+                <Button variant="outline" onClick={() => setIsRenameOpen(false)}>
+                  {t.common.cancel}
+                </Button>
                 <Button onClick={handleRename}>{t.common.save}</Button>
               </DialogFooter>
             </DialogContent>
@@ -170,15 +184,19 @@ const ChatWindow = () => {
                 <p>{t.common.deleteConfirmation.replace('{name}', activeChat.title)}</p>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>{t.common.cancel}</Button>
-                <Button variant="destructive" onClick={handleDelete}>{t.common.delete}</Button>
+                <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>
+                  {t.common.cancel}
+                </Button>
+                <Button variant="destructive" onClick={handleDelete}>
+                  {t.common.delete}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </>
       )}
     </>
-  )
-}
+  );
+};
 
-export default ChatWindow
+export default ChatWindow;

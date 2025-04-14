@@ -1,83 +1,89 @@
-import { useEffect, useState } from 'react'
-import { CompactCard, CompactCardContent, CompactCardDescription, CompactCardHeader, CompactCardTitle } from './CompactCard'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
+import { useEffect, useState } from 'react';
+import {
+  CompactCard,
+  CompactCardContent,
+  CompactCardDescription,
+  CompactCardHeader,
+  CompactCardTitle,
+} from './CompactCard';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
-import { AlertCircle, CheckCircle2 } from 'lucide-react'
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
-import { useLanguage } from '../../locales'
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { useLanguage } from '../../locales';
 
 const MCPSettings = () => {
-  const { t } = useLanguage()
-  const [mcpUrl, setMcpUrl] = useState('')
-  const [isConnected, setIsConnected] = useState(false)
-  const [connectionStatus, setConnectionStatus] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { t } = useLanguage();
+  const [mcpUrl, setMcpUrl] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const url = await window.electron.settings.getByKey('mcpUrl')
+        const url = await window.electron.settings.getByKey('mcpUrl');
         if (url) {
-          setMcpUrl(url)
+          setMcpUrl(url);
         }
 
         // Check connection status
-        const connected = await window.electron.mcp.isConnected()
-        setIsConnected(connected)
+        const connected = await window.electron.mcp.isConnected();
+        setIsConnected(connected);
 
         if (connected) {
-          const status = await window.electron.mcp.getConnectionStatus()
-          setConnectionStatus(status)
+          const status = await window.electron.mcp.getConnectionStatus();
+          setConnectionStatus(status);
         }
       } catch (error) {
-        console.error('Error loading MCP settings:', error)
+        console.error('Error loading MCP settings:', error);
       }
-    }
+    };
 
-    loadSettings()
-  }, [])
+    loadSettings();
+  }, []);
 
   const handleConnect = async () => {
-    if (!mcpUrl) return
+    if (!mcpUrl) return;
 
-    setIsLoading(true)
-    setError('')
+    setIsLoading(true);
+    setError('');
 
     try {
       // Save MCP URL
-      await window.electron.settings.set('mcpUrl', mcpUrl)
+      await window.electron.settings.set('mcpUrl', mcpUrl);
 
       // Connect to MCP server
-      const result = await window.electron.mcp.connect(mcpUrl)
+      const result = await window.electron.mcp.connect(mcpUrl);
 
-      setIsConnected(true)
-      const status = await window.electron.mcp.getConnectionStatus()
-      setConnectionStatus(status)
+      setIsConnected(true);
+      const status = await window.electron.mcp.getConnectionStatus();
+      setConnectionStatus(status);
     } catch (error) {
-      console.error('Error connecting to MCP server:', error)
-      setError(t.mcp.error)
-      setIsConnected(false)
+      console.error('Error connecting to MCP server:', error);
+      setError(t.mcp.error);
+      setIsConnected(false);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDisconnect = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      await window.electron.mcp.disconnect()
-      setIsConnected(false)
-      setConnectionStatus('')
+      await window.electron.mcp.disconnect();
+      setIsConnected(false);
+      setConnectionStatus('');
     } catch (error) {
-      console.error('Error disconnecting from MCP server:', error)
+      console.error('Error disconnecting from MCP server:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-3">
@@ -90,13 +96,15 @@ const MCPSettings = () => {
         </CompactCardHeader>
         <CompactCardContent className="space-y-3">
           <div className="space-y-1">
-            <Label htmlFor="mcpUrl" className="text-xs">{t.mcp.serverUrl}</Label>
+            <Label htmlFor="mcpUrl" className="text-xs">
+              {t.mcp.serverUrl}
+            </Label>
             <div className="flex space-x-2">
               <Input
                 id="mcpUrl"
                 className="h-8 text-xs"
                 value={mcpUrl}
-                onChange={(e) => setMcpUrl(e.target.value)}
+                onChange={e => setMcpUrl(e.target.value)}
                 placeholder="e.g. http://localhost:8000"
                 disabled={isLoading}
               />
@@ -154,9 +162,7 @@ const MCPSettings = () => {
           </CompactCardDescription>
         </CompactCardHeader>
         <CompactCardContent>
-          <p className="text-xs text-muted-foreground">
-            {t.mcp.withMcp}
-          </p>
+          <p className="text-xs text-muted-foreground">{t.mcp.withMcp}</p>
           <ul className="list-disc list-inside mt-1 text-xs text-muted-foreground space-y-0.5">
             <li>{t.mcp.accessFileSystem}</li>
             <li>{t.mcp.performWebSearches}</li>
@@ -167,7 +173,7 @@ const MCPSettings = () => {
         </CompactCardContent>
       </CompactCard>
     </div>
-  )
-}
+  );
+};
 
-export default MCPSettings
+export default MCPSettings;

@@ -26,7 +26,8 @@ contextBridge.exposeInMainWorld('electron', {
     create: (data: any) => ipcRenderer.invoke('models:create', data),
     update: (id: number, data: any) => ipcRenderer.invoke('models:update', id, data),
     delete: (id: number) => ipcRenderer.invoke('models:delete', id),
-    setActive: (id: number, isActive: boolean) => ipcRenderer.invoke('models:setActive', id, isActive),
+    setActive: (id: number, isActive: boolean) =>
+      ipcRenderer.invoke('models:setActive', id, isActive),
   },
 
   // 提供商相关 API
@@ -36,7 +37,8 @@ contextBridge.exposeInMainWorld('electron', {
     create: (data: any) => ipcRenderer.invoke('providers:create', data),
     update: (id: number, data: any) => ipcRenderer.invoke('providers:update', id, data),
     delete: (id: number) => ipcRenderer.invoke('providers:delete', id),
-    setActive: (id: number, isActive: boolean) => ipcRenderer.invoke('providers:setActive', id, isActive),
+    setActive: (id: number, isActive: boolean) =>
+      ipcRenderer.invoke('providers:setActive', id, isActive),
   },
 
   // 设置相关 API
@@ -48,19 +50,21 @@ contextBridge.exposeInMainWorld('electron', {
 
   // LLM 相关 API
   llm: {
-    chat: (messages: any[], modelParams: any) => ipcRenderer.invoke('llm:chat', messages, modelParams),
+    chat: (messages: any[], modelParams: any) =>
+      ipcRenderer.invoke('llm:chat', messages, modelParams),
     streamChat: (messages: any[], modelParams: any) => {
       // 创建一个新的 MessageChannel 用于与渲染进程通信
       const { port1, port2 } = new MessageChannel();
 
       // 调用主进程的 streamChat 方法
-      ipcRenderer.invoke('llm:streamChat', { messages, modelParams })
+      ipcRenderer
+        .invoke('llm:streamChat', { messages, modelParams })
         .then(result => {
           if (!result.success) {
             console.error('Stream setup failed');
             port2.postMessage({
               type: 'error',
-              error: '无法创建流式连接'
+              error: '无法创建流式连接',
             });
             return;
           }
@@ -75,7 +79,7 @@ contextBridge.exposeInMainWorld('electron', {
             console.log('Received chunk, length:', data.fullContent.length);
             port2.postMessage({
               type: 'content',
-              content: data.fullContent
+              content: data.fullContent,
             });
           };
 
@@ -130,7 +134,7 @@ contextBridge.exposeInMainWorld('electron', {
           console.error('Error invoking streamChat:', error);
           port2.postMessage({
             type: 'error',
-            error: '无法与 LLM 服务通信'
+            error: '无法与 LLM 服务通信',
           });
 
           setTimeout(() => port2.close(), 1000);
@@ -148,5 +152,5 @@ contextBridge.exposeInMainWorld('electron', {
     isConnected: () => ipcRenderer.invoke('mcp:isConnected'),
     getConnectionStatus: () => ipcRenderer.invoke('mcp:getConnectionStatus'),
     createMCPModel: (modelParams: any) => ipcRenderer.invoke('mcp:createMCPModel', modelParams),
-  }
+  },
 });

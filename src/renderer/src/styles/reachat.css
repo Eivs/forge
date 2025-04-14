@@ -9,20 +9,14 @@
 
 /* 用户消息 */
 .reachat-user-message {
-  background-color: var(--user-message);
   color: var(--user-message-foreground);
-  border-radius: var(--radius-lg);
   padding: 1rem;
-  box-shadow: 0 1px 2px var(--shadow);
 }
 
 /* 助手消息 */
 .reachat-assistant-message {
-  background-color: var(--assistant-message);
   color: var(--assistant-message-foreground);
-  border-radius: var(--radius-lg);
   padding: 1rem;
-  box-shadow: 0 1px 2px var(--shadow);
 }
 
 /* 代码块 */

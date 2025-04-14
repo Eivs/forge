@@ -4,7 +4,7 @@ import { initializeDatabase } from './database';
 import { setupAPIHandlers } from './api';
 
 // 处理在 Windows 上安装/卸载时创建/删除快捷方式。
-if (require('electron-squirrel-startup')) {
+if (await import('electron-squirrel-startup').then(module => module.default)) {
   app.quit();
 }
 
@@ -36,9 +36,9 @@ const createWindow = () => {
           "style-src 'self' 'unsafe-inline';",
           "img-src 'self' data: https:;",
           "font-src 'self' data:;",
-          "connect-src 'self' https:;"
-        ].join(' ')
-      }
+          "connect-src 'self' https:;",
+        ].join(' '),
+      },
     });
   });
 

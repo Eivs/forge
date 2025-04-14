@@ -1,76 +1,83 @@
-import { useEffect, useState } from 'react'
-import { useModelStore } from '../../store/modelStore'
-import { Provider } from '../../store/chatStore'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
-import { Switch } from '../ui/switch'
-import { Plus, Trash, Edit, Check, X } from 'lucide-react'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
-import { useLanguage } from '../../locales'
+import { useEffect, useState } from 'react';
+import { useModelStore } from '../../store/modelStore';
+import { Provider } from '../../store/chatStore';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Switch } from '../ui/switch';
+import { Plus, Trash, Edit, Check, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { useLanguage } from '../../locales';
 
 const ProvidersSettings = () => {
-  const { providers, fetchProviders, createProvider, updateProvider, deleteProvider, setProviderActive } = useModelStore()
-  const { t } = useLanguage()
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editingProvider, setEditingProvider] = useState<Provider | null>(null)
+  const {
+    providers,
+    fetchProviders,
+    createProvider,
+    updateProvider,
+    deleteProvider,
+    setProviderActive,
+  } = useModelStore();
+  const { t } = useLanguage();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
   const [newProvider, setNewProvider] = useState({
     name: '',
     baseUrl: '',
-    apiKey: ''
-  })
+    apiKey: '',
+  });
 
   // Initial loading of providers
   useEffect(() => {
-    fetchProviders()
-  }, [])
+    fetchProviders();
+  }, []);
 
   const handleAddProvider = async () => {
     try {
       await createProvider({
         ...newProvider,
-        isActive: false
-      })
+        isActive: false,
+      });
       setNewProvider({
         name: '',
         baseUrl: '',
-        apiKey: ''
-      })
-      setIsAddDialogOpen(false)
+        apiKey: '',
+      });
+      setIsAddDialogOpen(false);
     } catch (error) {
-      console.error('Error adding provider:', error)
+      console.error('Error adding provider:', error);
     }
-  }
+  };
 
   const handleEditProvider = async () => {
-    if (!editingProvider) return
+    if (!editingProvider) return;
 
     try {
-      await updateProvider(editingProvider.id, editingProvider)
-      setIsEditDialogOpen(false)
-      setEditingProvider(null)
+      await updateProvider(editingProvider.id, editingProvider);
+      setIsEditDialogOpen(false);
+      setEditingProvider(null);
     } catch (error) {
-      console.error('Error updating provider:', error)
+      console.error('Error updating provider:', error);
     }
-  }
+  };
 
   const handleDeleteProvider = async (id: number) => {
     try {
-      await deleteProvider(id)
+      await deleteProvider(id);
     } catch (error) {
-      console.error('Error deleting provider:', error)
+      console.error('Error deleting provider:', error);
     }
-  }
+  };
 
   const handleToggleActive = async (id: number, isActive: boolean) => {
     try {
-      await setProviderActive(id, isActive)
+      await setProviderActive(id, isActive);
     } catch (error) {
-      console.error('Error toggling provider active state:', error)
+      console.error('Error toggling provider active state:', error);
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -96,14 +103,14 @@ const ProvidersSettings = () => {
                   <div className="flex items-center space-x-2">
                     <Switch
                       checked={provider.isActive}
-                      onCheckedChange={(checked) => handleToggleActive(provider.id, checked)}
+                      onCheckedChange={checked => handleToggleActive(provider.id, checked)}
                     />
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        setEditingProvider(provider)
-                        setIsEditDialogOpen(true)
+                        setEditingProvider(provider);
+                        setIsEditDialogOpen(true);
                       }}
                     >
                       <Edit className="h-4 w-4" />
@@ -118,7 +125,7 @@ const ProvidersSettings = () => {
                   </div>
                 </div>
                 <CardDescription>
-                  {provider.isActive ? '已启用' : '已禁用'}
+                  {provider.isActive ? t.common.enabled : t.common.disabled}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -129,7 +136,7 @@ const ProvidersSettings = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">API Key:</span>
-                    <span>{provider.apiKey ? "**********" : t.provider.notSet}</span>
+                    <span>{provider.apiKey ? '**********' : t.provider.notSet}</span>
                   </div>
                 </div>
               </CardContent>
@@ -150,7 +157,7 @@ const ProvidersSettings = () => {
               <Input
                 id="name"
                 value={newProvider.name}
-                onChange={(e) => setNewProvider({ ...newProvider, name: e.target.value })}
+                onChange={e => setNewProvider({ ...newProvider, name: e.target.value })}
                 placeholder="e.g. OpenAI"
               />
             </div>
@@ -159,7 +166,7 @@ const ProvidersSettings = () => {
               <Input
                 id="baseUrl"
                 value={newProvider.baseUrl}
-                onChange={(e) => setNewProvider({ ...newProvider, baseUrl: e.target.value })}
+                onChange={e => setNewProvider({ ...newProvider, baseUrl: e.target.value })}
                 placeholder="e.g. https://api.openai.com/v1"
               />
             </div>
@@ -169,7 +176,7 @@ const ProvidersSettings = () => {
                 id="apiKey"
                 type="password"
                 value={newProvider.apiKey}
-                onChange={(e) => setNewProvider({ ...newProvider, apiKey: e.target.value })}
+                onChange={e => setNewProvider({ ...newProvider, apiKey: e.target.value })}
                 placeholder={t.provider.enterApiKey}
               />
             </div>
@@ -178,9 +185,7 @@ const ProvidersSettings = () => {
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
               {t.common.cancel}
             </Button>
-            <Button onClick={handleAddProvider}>
-              {t.common.add}
-            </Button>
+            <Button onClick={handleAddProvider}>{t.common.add}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -198,7 +203,7 @@ const ProvidersSettings = () => {
                 <Input
                   id="edit-name"
                   value={editingProvider.name}
-                  onChange={(e) => setEditingProvider({ ...editingProvider, name: e.target.value })}
+                  onChange={e => setEditingProvider({ ...editingProvider, name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -206,7 +211,9 @@ const ProvidersSettings = () => {
                 <Input
                   id="edit-baseUrl"
                   value={editingProvider.baseUrl}
-                  onChange={(e) => setEditingProvider({ ...editingProvider, baseUrl: e.target.value })}
+                  onChange={e =>
+                    setEditingProvider({ ...editingProvider, baseUrl: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -215,7 +222,7 @@ const ProvidersSettings = () => {
                   id="edit-apiKey"
                   type="password"
                   placeholder={t.provider.enterNewApiKey}
-                  onChange={(e) => setEditingProvider({ ...editingProvider, apiKey: e.target.value })}
+                  onChange={e => setEditingProvider({ ...editingProvider, apiKey: e.target.value })}
                 />
               </div>
             </div>
@@ -224,14 +231,12 @@ const ProvidersSettings = () => {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               {t.common.cancel}
             </Button>
-            <Button onClick={handleEditProvider}>
-              {t.common.save}
-            </Button>
+            <Button onClick={handleEditProvider}>{t.common.save}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
+  );
+};
 
-export default ProvidersSettings
+export default ProvidersSettings;

@@ -18,7 +18,7 @@ export function setupLLMHandlers() {
       const formattedMessages = formatMessagesForLLM(messages);
 
       // 生成完成响应
-      // @ts-ignore - 忽略类型检查，强制使用
+      // @ts-expect-error - Disable type checking for now
       const response = await model.invoke(formattedMessages);
 
       return response.content;
@@ -40,12 +40,13 @@ export function setupLLMHandlers() {
 
     try {
       const model = await getLLMModel(modelId, temperature, topP, true);
+      console.log(`Got model for streaming: ${model}`);
       const formattedMessages = formatMessagesForLLM(messages);
 
       // 使用中止信号创建流
-      // @ts-ignore - 忽略类型检查，强制使用
+      // @ts-expect-error - Disable type checking for now
       const stream = await model.stream(formattedMessages, {
-        signal: abortController.signal
+        signal: abortController.signal,
       });
 
       let fullContent = '';
@@ -59,7 +60,7 @@ export function setupLLMHandlers() {
           event.sender.send('llm:stream-chunk', {
             requestId,
             content: chunk.content,
-            fullContent: fullContent
+            fullContent: fullContent,
           });
         }
       }
@@ -67,7 +68,7 @@ export function setupLLMHandlers() {
       // 发送完成信号
       event.sender.send('llm:stream-done', {
         requestId,
-        content: fullContent
+        content: fullContent,
       });
 
       // 清理中止控制器
@@ -81,7 +82,7 @@ export function setupLLMHandlers() {
       // 发送错误信息
       event.sender.send('llm:stream-error', {
         requestId,
-        error: error?.message || '未知错误'
+        error: error?.message || '未知错误',
       });
 
       // 清理中止控制器
@@ -100,13 +101,20 @@ export function setupLLMHandlers() {
   });
 }
 
-async function getLLMModel(modelId: number, temperature: number, topP: number, streaming: boolean = false) {
-  console.log(`Getting LLM model with ID ${modelId}, temperature ${temperature}, topP ${topP}, streaming ${streaming}`);
+async function getLLMModel(
+  modelId: number,
+  temperature: number,
+  topP: number,
+  streaming: boolean = false
+) {
+  console.log(
+    `Getting LLM model with ID ${modelId}, temperature ${temperature}, topP ${topP}, streaming ${streaming}`
+  );
   const prisma = getDatabase();
 
   const model = await prisma.model.findUnique({
     where: { id: modelId },
-    include: { provider: true }
+    include: { provider: true },
   });
 
   if (!model) {
@@ -128,8 +136,8 @@ async function getLLMModel(modelId: number, temperature: number, topP: number, s
       streaming,
       openAIApiKey: 'sk-dummy-key-for-development',
       configuration: {
-        baseURL: model.provider.baseUrl
-      }
+        baseURL: model.provider.baseUrl,
+      },
     });
   }
 
@@ -142,13 +150,15 @@ async function getLLMModel(modelId: number, temperature: number, topP: number, s
         streaming,
         openAIApiKey: apiKey,
         configuration: {
-          baseURL: model.provider.baseUrl
-        }
+          baseURL: model.provider.baseUrl,
+        },
       });
 
     case 'DeepSeek':
       // DeepSeek 使用 OpenAI 兼容的 API
-      console.log(`Using DeepSeek API with baseURL: ${model.provider.baseUrl}, apiKey: ${apiKey ? 'set' : 'not set'}`);
+      console.log(
+        `Using DeepSeek API with baseURL: ${model.provider.baseUrl}, apiKey: ${apiKey ? 'set' : 'not set'}`
+      );
       return new ChatOpenAI({
         modelName: model.name,
         temperature,
@@ -156,8 +166,8 @@ async function getLLMModel(modelId: number, temperature: number, topP: number, s
         streaming,
         openAIApiKey: apiKey,
         configuration: {
-          baseURL: model.provider.baseUrl
-        }
+          baseURL: model.provider.baseUrl,
+        },
       });
 
     // 根据需要添加其他提供商的处理
@@ -208,7 +218,7 @@ function formatMessagesForLLM(messages: any[]) {
 
   // 尝试强制转换为兼容的格式
   try {
-    // @ts-ignore - 忽略类型检查，强制使用
+    // @ts-expect-error - Disable type checking for now
     return formattedMessages;
   } catch (error) {
     console.error('Error converting messages:', error);

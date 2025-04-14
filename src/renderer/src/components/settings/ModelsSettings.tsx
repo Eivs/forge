@@ -1,94 +1,103 @@
-import { useEffect, useState } from 'react'
-import { useModelStore } from '../../store/modelStore'
-import { Model, Provider } from '../../store/chatStore'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
-import { Switch } from '../ui/switch'
-import { Plus, Trash, Edit } from 'lucide-react'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import { useLanguage } from '../../locales'
+import { useEffect, useState } from 'react';
+import { useModelStore } from '../../store/modelStore';
+import { Model, Provider } from '../../store/chatStore';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Switch } from '../ui/switch';
+import { Plus, Trash, Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useLanguage } from '../../locales';
 
 const ModelsSettings = () => {
-  const { models, providers, fetchModels, fetchProviders, createModel, updateModel, deleteModel, setModelActive } = useModelStore()
-  const { t } = useLanguage()
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editingModel, setEditingModel] = useState<Model | null>(null)
+  const {
+    models,
+    providers,
+    fetchModels,
+    fetchProviders,
+    createModel,
+    updateModel,
+    deleteModel,
+    setModelActive,
+  } = useModelStore();
+  const { t } = useLanguage();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingModel, setEditingModel] = useState<Model | null>(null);
   const [newModel, setNewModel] = useState({
     name: '',
     providerId: 0,
     contextSize: 4000,
-    isActive: false
-  })
+    isActive: false,
+  });
 
   // Initial loading of models and providers
   useEffect(() => {
-    fetchModels()
-    fetchProviders()
-  }, [])
+    fetchModels();
+    fetchProviders();
+  }, []);
 
   const handleAddModel = async () => {
     try {
-      const provider = providers.find(p => p.id === newModel.providerId)
-      if (!provider) return
+      const provider = providers.find(p => p.id === newModel.providerId);
+      if (!provider) return;
 
       await createModel({
         ...newModel,
-        provider
-      })
+        provider,
+      });
       setNewModel({
         name: '',
         providerId: 0,
         contextSize: 4000,
-        isActive: false
-      })
-      setIsAddDialogOpen(false)
+        isActive: false,
+      });
+      setIsAddDialogOpen(false);
     } catch (error) {
-      console.error('Error adding model:', error)
+      console.error('Error adding model:', error);
     }
-  }
+  };
 
   const handleEditModel = async () => {
-    if (!editingModel) return
+    if (!editingModel) return;
 
     try {
-      const provider = providers.find(p => p.id === editingModel.providerId)
-      if (!provider) return
+      const provider = providers.find(p => p.id === editingModel.providerId);
+      if (!provider) return;
 
       await updateModel(editingModel.id, {
         ...editingModel,
-        provider
-      })
-      setIsEditDialogOpen(false)
-      setEditingModel(null)
+        provider,
+      });
+      setIsEditDialogOpen(false);
+      setEditingModel(null);
     } catch (error) {
-      console.error('Error updating model:', error)
+      console.error('Error updating model:', error);
     }
-  }
+  };
 
   const handleDeleteModel = async (id: number) => {
     try {
-      await deleteModel(id)
+      await deleteModel(id);
     } catch (error) {
-      console.error('Error deleting model:', error)
+      console.error('Error deleting model:', error);
     }
-  }
+  };
 
   const handleToggleActive = async (id: number, isActive: boolean) => {
     try {
-      await setModelActive(id, isActive)
+      await setModelActive(id, isActive);
     } catch (error) {
-      console.error('Error toggling model active state:', error)
+      console.error('Error toggling model active state:', error);
     }
-  }
+  };
 
   const getProviderName = (providerId: number) => {
-    const provider = providers.find(p => p.id === providerId)
-    return provider ? provider.name : '未知提供商'
-  }
+    const provider = providers.find(p => p.id === providerId);
+    return provider ? provider.name : '未知提供商';
+  };
 
   return (
     <div className="space-y-4">
@@ -101,9 +110,7 @@ const ModelsSettings = () => {
       </div>
 
       {models.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          {t.model.noModelsConfigured}
-        </div>
+        <div className="text-center py-8 text-muted-foreground">{t.model.noModelsConfigured}</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {models.map(model => (
@@ -114,7 +121,7 @@ const ModelsSettings = () => {
                   <div className="flex items-center space-x-2">
                     <Switch
                       checked={model.isActive}
-                      onCheckedChange={(checked) => handleToggleActive(model.id, checked)}
+                      onCheckedChange={checked => handleToggleActive(model.id, checked)}
                     />
                     <Button
                       variant="ghost"
@@ -122,34 +129,30 @@ const ModelsSettings = () => {
                       onClick={() => {
                         setEditingModel({
                           ...model,
-                          providerId: model.provider.id
-                        })
-                        setIsEditDialogOpen(true)
+                          providerId: model.provider.id,
+                        });
+                        setIsEditDialogOpen(true);
                       }}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteModel(model.id)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteModel(model.id)}>
                       <Trash className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
                 <CardDescription>
-                  {model.isActive ? '已启用' : '已禁用'}
+                  {model.isActive ? t.common.enabled : t.common.disabled}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">提供商:</span>
+                    <span className="text-muted-foreground">{t.provider.provider}:</span>
                     <span>{model.provider.name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">上下文大小:</span>
+                    <span className="text-muted-foreground">{t.model.contextSize}:</span>
                     <span>{model.contextSize.toLocaleString()} tokens</span>
                   </div>
                 </div>
@@ -170,7 +173,7 @@ const ModelsSettings = () => {
               <Label htmlFor="provider">{t.provider.provider}</Label>
               <Select
                 value={newModel.providerId.toString()}
-                onValueChange={(value) => setNewModel({ ...newModel, providerId: parseInt(value) })}
+                onValueChange={value => setNewModel({ ...newModel, providerId: parseInt(value) })}
               >
                 <SelectTrigger id="provider">
                   <SelectValue placeholder={t.provider.provider} />
@@ -189,7 +192,7 @@ const ModelsSettings = () => {
               <Input
                 id="name"
                 value={newModel.name}
-                onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
+                onChange={e => setNewModel({ ...newModel, name: e.target.value })}
                 placeholder="e.g. gpt-4-turbo"
               />
             </div>
@@ -199,14 +202,14 @@ const ModelsSettings = () => {
                 id="contextSize"
                 type="number"
                 value={newModel.contextSize}
-                onChange={(e) => setNewModel({ ...newModel, contextSize: parseInt(e.target.value) })}
+                onChange={e => setNewModel({ ...newModel, contextSize: parseInt(e.target.value) })}
               />
             </div>
             <div className="flex items-center space-x-2">
               <Switch
                 id="isActive"
                 checked={newModel.isActive}
-                onCheckedChange={(checked) => setNewModel({ ...newModel, isActive: checked })}
+                onCheckedChange={checked => setNewModel({ ...newModel, isActive: checked })}
               />
               <Label htmlFor="isActive">{t.model.enable}</Label>
             </div>
@@ -215,9 +218,7 @@ const ModelsSettings = () => {
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
               {t.common.cancel}
             </Button>
-            <Button onClick={handleAddModel}>
-              {t.common.add}
-            </Button>
+            <Button onClick={handleAddModel}>{t.common.add}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -234,7 +235,9 @@ const ModelsSettings = () => {
                 <Label htmlFor="edit-provider">{t.provider.provider}</Label>
                 <Select
                   value={editingModel.providerId.toString()}
-                  onValueChange={(value) => setEditingModel({ ...editingModel, providerId: parseInt(value) })}
+                  onValueChange={value =>
+                    setEditingModel({ ...editingModel, providerId: parseInt(value) })
+                  }
                 >
                   <SelectTrigger id="edit-provider">
                     <SelectValue placeholder={t.provider.provider} />
@@ -253,7 +256,7 @@ const ModelsSettings = () => {
                 <Input
                   id="edit-name"
                   value={editingModel.name}
-                  onChange={(e) => setEditingModel({ ...editingModel, name: e.target.value })}
+                  onChange={e => setEditingModel({ ...editingModel, name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -262,7 +265,9 @@ const ModelsSettings = () => {
                   id="edit-contextSize"
                   type="number"
                   value={editingModel.contextSize}
-                  onChange={(e) => setEditingModel({ ...editingModel, contextSize: parseInt(e.target.value) })}
+                  onChange={e =>
+                    setEditingModel({ ...editingModel, contextSize: parseInt(e.target.value) })
+                  }
                 />
               </div>
             </div>
@@ -271,14 +276,12 @@ const ModelsSettings = () => {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               {t.common.cancel}
             </Button>
-            <Button onClick={handleEditModel}>
-              {t.common.save}
-            </Button>
+            <Button onClick={handleEditModel}>{t.common.save}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
+  );
+};
 
-export default ModelsSettings
+export default ModelsSettings;

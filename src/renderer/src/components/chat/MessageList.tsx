@@ -1,11 +1,11 @@
-import { Message } from '../../store/chatStore'
-import ReactMarkdown from 'react-markdown'
-import { useEffect, useState } from 'react'
-import { useLanguage } from '../../locales'
+import { Message } from '../../store/chatStore';
+import ReactMarkdown from 'react-markdown';
+import { useEffect, useState } from 'react';
+import { useLanguage } from '../../locales';
 
 interface MessageListProps {
-  messages: Message[]
-  isGenerating: boolean
+  messages: Message[];
+  isGenerating: boolean;
 }
 
 // Loading animation component
@@ -14,7 +14,7 @@ const LoadingDots = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setDots(prev => prev.length >= 3 ? '.' : prev + '.');
+      setDots(prev => (prev.length >= 3 ? '.' : prev + '.'));
     }, 500);
 
     return () => clearInterval(interval);
@@ -35,19 +35,20 @@ const MessageList = ({ messages, isGenerating }: MessageListProps) => {
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-6 p-6 overflow-y-auto">
       {messages.map((message, index) => {
         const isLastAssistantMessage =
-          message.role === 'assistant' &&
-          index === messages.length - 1 &&
-          isGenerating;
+          message.role === 'assistant' && index === messages.length - 1 && isGenerating;
 
         return (
-          <div key={message.id} className={`${message.role === 'user' ? 'user-message' : 'assistant-message'}`}>
+          <div
+            key={message.id}
+            className={`${message.role === 'user' ? 'user-message' : 'assistant-message'}`}
+          >
             <div className="flex items-start gap-3">
               <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground shrink-0 shadow-sm">
                 {message.role === 'user' ? 'U' : message.role === 'assistant' ? 'A' : 'S'}
@@ -63,7 +64,7 @@ const MessageList = ({ messages, isGenerating }: MessageListProps) => {
         );
       })}
     </div>
-  )
-}
+  );
+};
 
-export default MessageList
+export default MessageList;

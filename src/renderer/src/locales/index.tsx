@@ -34,17 +34,19 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     setTranslations(language === 'zh' ? zh : en);
     localStorage.setItem('language', language);
-    
+
     // 可选：如果需要，也可以更新 HTML 的 lang 属性
     document.documentElement.lang = language;
   }, [language]);
 
   return (
-    <LanguageContext.Provider value={{
-      language,
-      t: translations,
-      setLanguage,
-    }}>
+    <LanguageContext.Provider
+      value={{
+        language,
+        t: translations,
+        setLanguage,
+      }}
+    >
       {children}
     </LanguageContext.Provider>
   );

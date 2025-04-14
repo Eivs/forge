@@ -1,41 +1,46 @@
-import { useEffect, useState } from 'react'
-import { useChatStore } from '../../store/chatStore'
-import { MoreHorizontal, Trash } from 'lucide-react'
-import { Button } from '../ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog'
-import { useLanguage } from '../../locales'
+import { useEffect, useState } from 'react';
+import { useChatStore } from '../../store/chatStore';
+import { MoreHorizontal, Trash } from 'lucide-react';
+import { Button } from '../ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
+import { useLanguage } from '../../locales';
 
 const ChatList = () => {
-  const { chats, activeChat, setActiveChat, deleteChat, fetchChats } = useChatStore()
-  const { t } = useLanguage()
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [chatToDelete, setChatToDelete] = useState<{id: number, title: string} | null>(null)
+  const { chats, activeChat, setActiveChat, deleteChat, fetchChats } = useChatStore();
+  const { t } = useLanguage();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [chatToDelete, setChatToDelete] = useState<{ id: number; title: string } | null>(null);
 
   useEffect(() => {
-    fetchChats()
-  }, [])
+    fetchChats();
+  }, []);
 
   const handleChatClick = (chatId: number) => {
-    const chat = chats.find(c => c.id === chatId)
+    const chat = chats.find(c => c.id === chatId);
     if (chat) {
-      setActiveChat(chat)
+      setActiveChat(chat);
     }
-  }
+  };
 
-  const openDeleteDialog = (chat: {id: number, title: string}, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setChatToDelete(chat)
-    setIsDeleteDialogOpen(true)
-  }
+  const openDeleteDialog = (chat: { id: number; title: string }, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setChatToDelete(chat);
+    setIsDeleteDialogOpen(true);
+  };
 
   const handleDeleteChat = async () => {
     if (chatToDelete) {
-      await deleteChat(chatToDelete.id)
-      setIsDeleteDialogOpen(false)
-      setChatToDelete(null)
+      await deleteChat(chatToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setChatToDelete(null);
     }
-  }
+  };
 
   return (
     <>
@@ -69,7 +74,7 @@ const ChatList = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="shadow-md">
                   <DropdownMenuItem
-                    onClick={(e) => openDeleteDialog({id: chat.id, title: chat.title}, e)}
+                    onClick={e => openDeleteDialog({ id: chat.id, title: chat.title }, e)}
                     className="text-destructive focus:text-destructive"
                   >
                     <Trash className="mr-2 h-4 w-4" />
@@ -89,16 +94,26 @@ const ChatList = () => {
             <DialogTitle className="text-xl font-semibold">{t.chat.deleteChat}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-muted-foreground">{t.common.deleteConfirmation.replace('{name}', chatToDelete?.title || '')}</p>
+            <p className="text-muted-foreground">
+              {t.common.deleteConfirmation.replace('{name}', chatToDelete?.title || '')}
+            </p>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} className="shadow-sm">{t.common.cancel}</Button>
-            <Button variant="destructive" onClick={handleDeleteChat} className="shadow-sm">{t.common.delete}</Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="shadow-sm"
+            >
+              {t.common.cancel}
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteChat} className="shadow-sm">
+              {t.common.delete}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
-  )
-}
+  );
+};
 
-export default ChatList
+export default ChatList;

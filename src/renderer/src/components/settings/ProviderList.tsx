@@ -1,59 +1,60 @@
-import { useState } from 'react'
-import { useModelStore } from '../../store/modelStore'
-import { Provider } from '../../store/chatStore'
-import { Button } from '../ui/button'
-import { Plus, Settings } from 'lucide-react'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
-import { useLanguage } from '../../locales'
-import { cn } from '../../lib/utils'
+import { useState } from 'react';
+import { useModelStore } from '../../store/modelStore';
+import { Provider } from '../../store/chatStore';
+import { Button } from '../ui/button';
+import { Plus, Settings } from 'lucide-react';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { useLanguage } from '../../locales';
+import { cn } from '../../lib/utils';
 
 interface ProviderListProps {
-  providers: Provider[]
-  selectedProviderId: number | null
-  onSelectProvider: (provider: Provider) => void
-  onAddProvider?: () => void
+  providers: Provider[];
+  selectedProviderId: number | null;
+  onSelectProvider: (provider: Provider) => void;
+  onAddProvider?: () => void;
 }
 
-const ProviderList = ({
-  providers,
-  selectedProviderId,
-  onSelectProvider
-}: ProviderListProps) => {
-  const { t } = useLanguage()
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+const ProviderList = ({ providers, selectedProviderId, onSelectProvider }: ProviderListProps) => {
+  const { t } = useLanguage();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newProvider, setNewProvider] = useState({
     name: '',
     baseUrl: '',
-    apiKey: ''
-  })
-  const { createProvider } = useModelStore()
+    apiKey: '',
+  });
+  const { createProvider } = useModelStore();
 
   const handleAddProvider = async () => {
     try {
       const provider = await createProvider({
         ...newProvider,
-        isActive: false
-      })
+        isActive: false,
+      });
       setNewProvider({
         name: '',
         baseUrl: '',
-        apiKey: ''
-      })
-      setIsAddDialogOpen(false)
-      onSelectProvider(provider)
+        apiKey: '',
+      });
+      setIsAddDialogOpen(false);
+      onSelectProvider(provider);
     } catch (error) {
-      console.error('Error adding provider:', error)
+      console.error('Error adding provider:', error);
     }
-  }
+  };
 
   return (
     <div className="h-full flex flex-col">
       <div className="p-2 border-b">
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-medium">{t.provider.providers}</h3>
-          <Button size="sm" variant="outline" onClick={() => setIsAddDialogOpen(true)} className="h-7 text-xs px-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsAddDialogOpen(true)}
+            className="h-7 text-xs px-2"
+          >
             <Plus className="h-3 w-3 mr-1" />
             {t.provider.addProvider}
           </Button>
@@ -71,8 +72,8 @@ const ProviderList = ({
               <div
                 key={provider.id}
                 className={cn(
-                  "flex items-center justify-between py-1 px-2 rounded-md cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors text-sm",
-                  selectedProviderId === provider.id && "bg-accent text-accent-foreground"
+                  'flex items-center justify-between py-1 px-2 rounded-md cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors text-sm',
+                  selectedProviderId === provider.id && 'bg-accent text-accent-foreground'
                 )}
                 onClick={() => onSelectProvider(provider)}
               >
@@ -80,9 +81,7 @@ const ProviderList = ({
                   <Settings className="h-3 w-3 mr-1 opacity-70" />
                   <span className="text-xs">{provider.name}</span>
                 </div>
-                {provider.isActive && (
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                )}
+                {provider.isActive && <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>}
               </div>
             ))}
           </div>
@@ -101,7 +100,7 @@ const ProviderList = ({
               <Input
                 id="name"
                 value={newProvider.name}
-                onChange={(e) => setNewProvider({ ...newProvider, name: e.target.value })}
+                onChange={e => setNewProvider({ ...newProvider, name: e.target.value })}
                 placeholder="e.g. OpenAI"
               />
             </div>
@@ -110,7 +109,7 @@ const ProviderList = ({
               <Input
                 id="baseUrl"
                 value={newProvider.baseUrl}
-                onChange={(e) => setNewProvider({ ...newProvider, baseUrl: e.target.value })}
+                onChange={e => setNewProvider({ ...newProvider, baseUrl: e.target.value })}
                 placeholder="e.g. https://api.openai.com/v1"
               />
             </div>
@@ -120,7 +119,7 @@ const ProviderList = ({
                 id="apiKey"
                 type="password"
                 value={newProvider.apiKey}
-                onChange={(e) => setNewProvider({ ...newProvider, apiKey: e.target.value })}
+                onChange={e => setNewProvider({ ...newProvider, apiKey: e.target.value })}
                 placeholder={t.provider.enterApiKey}
               />
             </div>
@@ -129,14 +128,12 @@ const ProviderList = ({
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
               {t.common.cancel}
             </Button>
-            <Button onClick={handleAddProvider}>
-              {t.common.add}
-            </Button>
+            <Button onClick={handleAddProvider}>{t.common.add}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
+  );
+};
 
-export default ProviderList
+export default ProviderList;
