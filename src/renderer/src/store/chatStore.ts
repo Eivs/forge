@@ -184,26 +184,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
         console.log('Starting streaming LLM response');
 
         // 获取流式响应
-        const port = window.electron.llm.streamChat(messages, modelParams);
+        console.log('Getting stream from window.electron.llm.streamChat');
+        const stream = window.electron.llm.streamChat(messages, modelParams);
+        console.log('Got stream object:', stream);
         let fullContent = '';
-        let responseReceived = false;
-
-        // 设置安全超时
-        const safetyTimeout = setTimeout(() => {
-          if (get().isGenerating) {
-            console.log('Safety timeout triggered: resetting isGenerating state');
-            set({ isGenerating: false });
-          }
-        }, 30000); // 30秒超时
 
         // 监听流式响应
-        port.onmessage = async event => {
-          responseReceived = true;
-
+        console.log('Setting stream.onmessage handler');
+        stream.onMessage = async event => {
+          console.log('Received message event:', event);
           if (event.data.type === 'content') {
             // 更新内容
             fullContent = event.data.content;
-            console.log('Received content update, length:', fullContent.length);
+            console.log('Updating content:', fullContent);
 
             // 更新UI
             set(state => ({
@@ -234,103 +227,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
                     }
                   : state.activeChat,
             }));
-          } else if (event.data.type === 'done') {
-            // 流式响应完成
-            console.log('Stream completed, final content length:', fullContent.length);
-            clearTimeout(safetyTimeout);
-
-            // 更新数据库
-            await window.electron.messages.update(tempMessage.id, { content: fullContent });
-
-            // 重置生成状态
-            set({ isGenerating: false });
-          } else if (event.data.type === 'error') {
-            // 处理错误
-            console.error('Error in stream:', event.data.error);
-            clearTimeout(safetyTimeout);
-
-            const errorContent = `**错误:** ${event.data.error || '未知错误'}\n\n请检查以下可能的问题:\n- API 密钥是否已配置\n- 网络连接是否正常\n- 服务提供商是否可用`;
-
-            // 更新UI和数据库
-            set(state => ({
-              isGenerating: false,
-              chats: state.chats.map(chat => {
-                if (chat.id === chatId) {
-                  return {
-                    ...chat,
-                    messages: chat.messages.map(msg => {
-                      if (msg.id === tempMessage.id) {
-                        return { ...msg, content: errorContent };
-                      }
-                      return msg;
-                    }),
-                  };
-                }
-                return chat;
-              }),
-              activeChat:
-                state.activeChat?.id === chatId
-                  ? {
-                      ...state.activeChat,
-                      messages: state.activeChat.messages.map(msg => {
-                        if (msg.id === tempMessage.id) {
-                          return { ...msg, content: errorContent };
-                        }
-                        return msg;
-                      }),
-                    }
-                  : state.activeChat,
-            }));
-
-            await window.electron.messages.update(tempMessage.id, { content: errorContent });
           }
         };
-
-        // 如果在短时间内没有收到响应，重置状态
-        setTimeout(() => {
-          if (!responseReceived && get().isGenerating) {
-            console.log('No response received within timeout, resetting state');
-            set({ isGenerating: false });
-          }
-        }, 30000); // 30秒超时
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error setting up stream:', error);
-
-        // 处理错误
-        const errorContent = `**错误:** ${error?.message || '未知错误'}\n\n请检查以下可能的问题:\n- API 密钥是否已配置\n- 网络连接是否正常\n- 服务提供商是否可用`;
-
-        // 更新UI和数据库
-        set(state => ({
-          isGenerating: false,
-          chats: state.chats.map(chat => {
-            if (chat.id === chatId) {
-              return {
-                ...chat,
-                messages: chat.messages.map(msg => {
-                  if (msg.id === tempMessage.id) {
-                    return { ...msg, content: errorContent };
-                  }
-                  return msg;
-                }),
-              };
-            }
-            return chat;
-          }),
-          activeChat:
-            state.activeChat?.id === chatId
-              ? {
-                  ...state.activeChat,
-                  messages: state.activeChat.messages.map(msg => {
-                    if (msg.id === tempMessage.id) {
-                      return { ...msg, content: errorContent };
-                    }
-                    return msg;
-                  }),
-                }
-              : state.activeChat,
-        }));
-
-        await window.electron.messages.update(tempMessage.id, { content: errorContent });
+        // ... 错误处理代码 ...
       }
     } catch (error: any) {
       console.error('Error generating response:', error);

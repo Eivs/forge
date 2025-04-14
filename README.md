@@ -91,7 +91,8 @@ forge/
 │   │   └── index.html       # 主页面
 │   │
 │   └── preload/             # 预加载脚本
-│       └── index.ts         # IPC 通信桥接
+│       ├── preload.ts       # IPC 通信桥接
+│       └── index.ts         # 预加载入口
 │
 ├── prisma/                  # Prisma ORM
 │   ├── schema.prisma        # 数据库模型定义

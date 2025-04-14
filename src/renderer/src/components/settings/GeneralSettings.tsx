@@ -2,17 +2,27 @@ import { useTheme } from '../theme-provider';
 import {
   CompactCard,
   CompactCardContent,
-  CompactCardDescription,
   CompactCardHeader,
   CompactCardTitle,
 } from './CompactCard';
-import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useLanguage, Language } from '../../locales';
+import { useModelStore } from '../../store/modelStore';
+import { useEffect } from 'react';
 
 const GeneralSettings = () => {
   const { theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
+  const { activeModels, defaultModelId, fetchModels, loadDefaultModel } = useModelStore();
+
+  // 获取模型列表和默认模型设置
+  useEffect(() => {
+    const loadData = async () => {
+      await fetchModels();
+      await loadDefaultModel();
+    };
+    loadData();
+  }, [fetchModels, loadDefaultModel]);
 
   const handleThemeChange = (value: string) => {
     setTheme(value as 'light' | 'dark' | 'system');
@@ -23,20 +33,19 @@ const GeneralSettings = () => {
     setLanguage(value);
   };
 
+  const handleDefaultModelChange = async (value: string) => {
+    const { setDefaultModel } = useModelStore.getState();
+    await setDefaultModel(value);
+  };
+
   return (
     <div className="space-y-3">
       <CompactCard>
         <CompactCardHeader>
-          <CompactCardTitle className="text-sm">{t.settings.appearance}</CompactCardTitle>
-          <CompactCardDescription className="text-xs">
-            {t.settings.customizeAppearance}
-          </CompactCardDescription>
+          <CompactCardTitle className="text-sm">{t.settings.theme}</CompactCardTitle>
         </CompactCardHeader>
         <CompactCardContent className="space-y-3">
           <div className="space-y-1">
-            <Label htmlFor="theme" className="text-xs">
-              {t.settings.theme}
-            </Label>
             <Select value={theme} onValueChange={handleThemeChange}>
               <SelectTrigger id="theme" className="h-8 text-xs">
                 <SelectValue placeholder={t.settings.selectTheme} />
@@ -54,15 +63,9 @@ const GeneralSettings = () => {
       <CompactCard>
         <CompactCardHeader>
           <CompactCardTitle className="text-sm">{t.settings.language}</CompactCardTitle>
-          <CompactCardDescription className="text-xs">
-            {t.settings.selectLanguage}
-          </CompactCardDescription>
         </CompactCardHeader>
         <CompactCardContent>
           <div className="space-y-1">
-            <Label htmlFor="language" className="text-xs">
-              {t.settings.language}
-            </Label>
             <Select value={language} onValueChange={handleLanguageChange}>
               <SelectTrigger id="language" className="h-8 text-xs">
                 <SelectValue placeholder={t.settings.selectLanguage} />
@@ -72,6 +75,34 @@ const GeneralSettings = () => {
                 <SelectItem value="en">{t.settings.english}</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+        </CompactCardContent>
+      </CompactCard>
+
+      <CompactCard>
+        <CompactCardHeader>
+          <CompactCardTitle className="text-sm">{t.settings.defaultModel}</CompactCardTitle>
+        </CompactCardHeader>
+        <CompactCardContent>
+          <div className="space-y-1">
+            {activeModels.length > 0 ? (
+              <Select value={defaultModelId} onValueChange={handleDefaultModelChange}>
+                <SelectTrigger id="defaultModel" className="h-8 text-xs">
+                  <SelectValue placeholder={t.settings.selectDefaultModel} />
+                </SelectTrigger>
+                <SelectContent className="text-xs">
+                  {activeModels.map(model => (
+                    <SelectItem key={model.id} value={model.id.toString()}>
+                      {model.name} ({model.provider.name})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="text-xs text-muted-foreground p-2 bg-muted rounded-md">
+                {t.settings.configureModelsFirst}
+              </div>
+            )}
           </div>
         </CompactCardContent>
       </CompactCard>

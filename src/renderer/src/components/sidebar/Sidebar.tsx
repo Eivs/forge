@@ -5,40 +5,35 @@ import { useModelStore } from '../../store/modelStore';
 import ChatList from './ChatList';
 import { Button } from '../ui/button';
 import { Settings, Plus, Sun, Moon, MonitorSmartphone } from 'lucide-react';
-import { Model } from '../../store/chatStore';
+
 import SettingsDialog from '../settings/SettingsDialog';
 import { useLanguage } from '../../locales';
 
 const Sidebar = () => {
   const { theme, setTheme } = useTheme();
   const { createChat } = useChatStore();
-  const { models, fetchModels } = useModelStore();
+  const { fetchModels, loadDefaultModel, defaultModel } = useModelStore();
   const { t } = useLanguage();
-  const [activeModel, setActiveModel] = useState<Model | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Initial model loading
   useEffect(() => {
-    fetchModels();
-  }, []);
-
-  // When the model list updates, set the active model
-  useEffect(() => {
-    const activeModels = models.filter(model => model.isActive);
-    if (activeModels.length > 0) {
-      setActiveModel(activeModels[0]);
-    }
-  }, [models]);
+    const initializeModels = async () => {
+      await fetchModels();
+      await loadDefaultModel();
+    };
+    initializeModels();
+  }, [fetchModels, loadDefaultModel]);
 
   const handleNewChat = async () => {
-    if (!activeModel) return;
+    if (!defaultModel) return;
 
     await createChat({
       title: t.chat.newChat,
       systemPrompt: '',
       temperature: 0.7,
       topP: 1.0,
-      model: activeModel,
+      model: defaultModel,
     });
   };
 
@@ -52,7 +47,7 @@ const Sidebar = () => {
         <Button
           onClick={handleNewChat}
           className="w-full justify-start gap-2 shadow-sm hover:shadow transition-all"
-          disabled={!activeModel}
+          disabled={!defaultModel}
           variant="default"
         >
           <Plus size={18} />

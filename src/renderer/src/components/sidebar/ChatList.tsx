@@ -46,7 +46,7 @@ const ChatList = () => {
     <>
       <div className="space-y-2">
         {chats.length === 0 ? (
-          <div className="text-center py-6 text-muted-foreground bg-card-muted rounded-lg p-4">
+          <div className="text-center text-muted-foreground bg-card-muted rounded-lg p-4">
             {t.common.noChatsYet}
           </div>
         ) : (

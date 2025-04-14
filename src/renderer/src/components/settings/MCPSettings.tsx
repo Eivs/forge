@@ -153,25 +153,6 @@ const MCPSettings = () => {
           )}
         </CompactCardContent>
       </CompactCard>
-
-      <CompactCard>
-        <CompactCardHeader>
-          <CompactCardTitle className="text-sm">{t.mcp.features}</CompactCardTitle>
-          <CompactCardDescription className="text-xs">
-            {t.mcp.featuresDescription}
-          </CompactCardDescription>
-        </CompactCardHeader>
-        <CompactCardContent>
-          <p className="text-xs text-muted-foreground">{t.mcp.withMcp}</p>
-          <ul className="list-disc list-inside mt-1 text-xs text-muted-foreground space-y-0.5">
-            <li>{t.mcp.accessFileSystem}</li>
-            <li>{t.mcp.performWebSearches}</li>
-            <li>{t.mcp.callExternalApis}</li>
-            <li>{t.mcp.runCode}</li>
-            <li>{t.mcp.andMore}</li>
-          </ul>
-        </CompactCardContent>
-      </CompactCard>
     </div>
   );
 };

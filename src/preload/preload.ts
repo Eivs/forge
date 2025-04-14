@@ -50,97 +50,107 @@ contextBridge.exposeInMainWorld('electron', {
 
   // LLM 相关 API
   llm: {
+    // 非流式对话
     chat: (messages: any[], modelParams: any) =>
       ipcRenderer.invoke('llm:chat', messages, modelParams),
+    // 流式对话
     streamChat: (messages: any[], modelParams: any) => {
-      // 创建一个新的 MessageChannel 用于与渲染进程通信
-      const { port1, port2 } = new MessageChannel();
+      console.log('Creating stream object');
 
-      // 调用主进程的 streamChat 方法
+      // 创建一个 EventEmitter 风格的对象
+      const stream = {
+        _onmessage: (_?: any) => {},
+        set onMessage(handler) {
+          console.log('Setting onmessage handler:', handler);
+          this._onmessage = handler;
+        },
+        get onMessage() {
+          return this._onmessage;
+        },
+      };
+
+      // 立即调用主进程的 streamChat 方法
       ipcRenderer
         .invoke('llm:streamChat', { messages, modelParams })
         .then(result => {
+          console.log('Stream setup result:', result);
           if (!result.success) {
-            console.error('Stream setup failed');
-            port2.postMessage({
-              type: 'error',
-              error: '无法创建流式连接',
-            });
+            if (stream._onmessage) {
+              stream._onmessage({
+                data: {
+                  type: 'error',
+                  error: '无法创建流式连接',
+                },
+              });
+            }
             return;
           }
 
           const { requestId } = result;
-          console.log('Stream setup successful, requestId:', requestId);
 
-          // 设置监听器来接收流式响应
+          // 设置监听器
           const chunkListener = (_: any, data: any) => {
             if (data.requestId !== requestId) return;
-
-            console.log('Received chunk, length:', data.fullContent.length);
-            port2.postMessage({
-              type: 'content',
-              content: data.fullContent,
-            });
+            console.log('Received chunk:', data);
+            if (stream._onmessage) {
+              stream._onmessage({
+                data: {
+                  type: 'content',
+                  content: data.fullContent,
+                },
+              });
+            }
           };
 
           const doneListener = (_: any, data: any) => {
             if (data.requestId !== requestId) return;
-
-            console.log('Stream completed');
-            port2.postMessage({ type: 'done', content: data.content });
-
-            // 移除监听器
-            ipcRenderer.removeListener('llm:stream-chunk', chunkListener);
-            ipcRenderer.removeListener('llm:stream-done', doneListener);
-            ipcRenderer.removeListener('llm:stream-error', errorListener);
-
-            // 关闭端口
-            setTimeout(() => {
-              try {
-                port2.close();
-              } catch (err) {
-                console.error('Error closing port:', err);
-              }
-            }, 1000);
+            if (stream._onmessage) {
+              stream._onmessage({
+                data: {
+                  type: 'done',
+                  content: data.content,
+                },
+              });
+            }
+            cleanup();
           };
 
           const errorListener = (_: any, data: any) => {
             if (data.requestId !== requestId) return;
+            if (stream._onmessage) {
+              stream._onmessage({
+                data: {
+                  type: 'error',
+                  error: data.error,
+                },
+              });
+            }
+            cleanup();
+          };
 
-            console.error('Stream error:', data.error);
-            port2.postMessage({ type: 'error', error: data.error });
-
-            // 移除监听器
+          const cleanup = () => {
             ipcRenderer.removeListener('llm:stream-chunk', chunkListener);
             ipcRenderer.removeListener('llm:stream-done', doneListener);
             ipcRenderer.removeListener('llm:stream-error', errorListener);
-
-            // 关闭端口
-            setTimeout(() => {
-              try {
-                port2.close();
-              } catch (err) {
-                console.error('Error closing port:', err);
-              }
-            }, 1000);
           };
 
-          // 添加监听器
           ipcRenderer.on('llm:stream-chunk', chunkListener);
           ipcRenderer.on('llm:stream-done', doneListener);
           ipcRenderer.on('llm:stream-error', errorListener);
         })
         .catch(error => {
-          console.error('Error invoking streamChat:', error);
-          port2.postMessage({
-            type: 'error',
-            error: '无法与 LLM 服务通信',
-          });
-
-          setTimeout(() => port2.close(), 1000);
+          console.error('Stream setup error:', error);
+          if (stream._onmessage) {
+            stream._onmessage({
+              data: {
+                type: 'error',
+                error: '无法与 LLM 服务通信',
+              },
+            });
+          }
         });
 
-      return port1;
+      return stream;
     },
     abortGeneration: () => ipcRenderer.invoke('llm:abortGeneration'),
   },

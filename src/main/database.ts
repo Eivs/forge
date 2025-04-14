@@ -3,6 +3,7 @@ import { getPrismaClient } from './prisma';
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
+import { defaultProviders, defaultModels, defaultUser, defaultSettings } from './defaultData';
 
 export async function initializeDatabase() {
   try {
@@ -26,7 +27,13 @@ export async function initializeDatabase() {
 
     const prisma = getPrismaClient();
 
-    // 如果不存在默认设置，则初始化默认设置
+    // 初始化默认提供商
+    await initializeDefaultProviders(prisma);
+
+    // 初始化默认模型
+    await initializeDefaultModels(prisma);
+
+    // 初始化默认设置和用户
     await initializeDefaultSettings(prisma);
 
     console.log('Database has been initialized!');
@@ -41,94 +48,65 @@ async function initializeDefaultSettings(prisma: PrismaClient) {
   // 如果不存在默认用户，则初始化默认用户
   const existingUsers = await prisma.user.findMany();
 
-  let defaultUser;
+  let createdUser;
   if (existingUsers.length === 0) {
-    defaultUser = await prisma.user.create({
-      data: {
-        name: 'Default User',
-        email: 'user@example.com',
-      },
+    createdUser = await prisma.user.create({
+      data: defaultUser,
     });
 
     console.log('Default user has been created');
   } else {
-    defaultUser = existingUsers[0];
+    createdUser = existingUsers[0];
   }
 
   // 如果不存在默认设置，则初始化默认设置
   const existingSettings = await prisma.setting.findMany();
 
   if (existingSettings.length === 0) {
-    // 创建默认主题设置
-    await prisma.setting.create({
-      data: {
-        key: 'theme',
-        value: 'light',
-      },
-    });
-
-    // 创建默认语言设置
-    await prisma.setting.create({
-      data: {
-        key: 'language',
-        value: 'en',
-      },
-    });
+    // 创建默认设置
+    for (const setting of defaultSettings) {
+      await prisma.setting.create({
+        data: setting,
+      });
+    }
 
     // 创建默认用户设置
     await prisma.setting.create({
       data: {
         key: 'defaultUserId',
-        value: defaultUser.id.toString(),
+        value: createdUser.id.toString(),
       },
     });
 
+    // 创建默认模型设置
+    const defaultModel = await prisma.model.findFirst({ where: { isActive: true } });
+    if (defaultModel) {
+      await prisma.setting.create({
+        data: {
+          key: 'defaultModelId',
+          value: defaultModel.id.toString(),
+        },
+      });
+    }
     console.log('Default settings have been initialized');
   }
+}
 
+async function initializeDefaultProviders(prisma: PrismaClient) {
   // 如果不存在默认提供商，则初始化默认提供商
   const existingProviders = await prisma.provider.findMany();
 
-  if (existingProviders.length === 0) {
-    // 创建默认提供商
-    await prisma.provider.createMany({
-      data: [
-        {
-          name: 'DeepSeek',
-          baseUrl: 'https://api.deepseek.com/v1',
-          apiKey: '',
-          isActive: true,
-        },
-        {
-          name: 'CoresHub',
-          baseUrl: 'https://openapi.coreshub.cn/v1',
-          apiKey: '',
-          isActive: true,
-        },
-        {
-          name: 'OpenAI',
-          baseUrl: 'https://api.openai.com/v1',
-          apiKey: '',
-          isActive: false,
-        },
-        {
-          name: 'Anthropic',
-          baseUrl: 'https://api.anthropic.com/v1',
-          apiKey: '',
-          isActive: false,
-        },
-        {
-          name: 'Google',
-          baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-          apiKey: '',
-          isActive: false,
-        },
-      ],
-    });
+  if (existingProviders.length !== 0) return;
 
-    console.log('Default providers have been initialized');
-  }
+  // 创建默认提供商
+  await prisma.provider.createMany({
+    data: defaultProviders,
+  });
 
+  console.log('Default providers have been initialized');
+}
+
+async function initializeDefaultModels(prisma: PrismaClient) {
   // 如果不存在默认模型，则初始化默认模型
   const existingModels = await prisma.model.findMany();
 
@@ -139,110 +117,49 @@ async function initializeDefaultSettings(prisma: PrismaClient) {
     const deepSeekProvider = await prisma.provider.findFirst({ where: { name: 'DeepSeek' } });
     const coresHubProvider = await prisma.provider.findFirst({ where: { name: 'CoresHub' } });
 
-    if (coresHubProvider) {
+    // 使用默认模型数据创建模型
+    if (coresHubProvider && defaultModels.CoresHub) {
       await prisma.model.createMany({
-        data: [
-          {
-            name: 'DeepSeek-V3',
-            providerId: coresHubProvider.id,
-            contextSize: 16000,
-            isActive: true,
-          },
-          {
-            name: 'DeepSeek-R1',
-            providerId: coresHubProvider.id,
-            contextSize: 16000,
-            isActive: true,
-          },
-        ],
+        data: defaultModels.CoresHub.map(model => ({
+          ...model,
+          providerId: coresHubProvider.id,
+        })),
       });
     }
 
-    if (deepSeekProvider) {
+    if (deepSeekProvider && defaultModels.DeepSeek) {
       await prisma.model.createMany({
-        data: [
-          {
-            name: 'deepseek-chat',
-            providerId: deepSeekProvider.id,
-            contextSize: 32000,
-            isActive: true,
-          },
-          {
-            name: 'deepseek-reasoner',
-            providerId: deepSeekProvider.id,
-            contextSize: 32000,
-            isActive: true,
-          },
-        ],
+        data: defaultModels.DeepSeek.map(model => ({
+          ...model,
+          providerId: deepSeekProvider.id,
+        })),
       });
     }
 
-    if (openAIProvider) {
+    if (openAIProvider && defaultModels.OpenAI) {
       await prisma.model.createMany({
-        data: [
-          {
-            name: 'gpt-4-turbo',
-            providerId: openAIProvider.id,
-            contextSize: 128000,
-            isActive: false,
-          },
-          {
-            name: 'gpt-4o',
-            providerId: openAIProvider.id,
-            contextSize: 128000,
-            isActive: false,
-          },
-          {
-            name: 'gpt-3.5-turbo',
-            providerId: openAIProvider.id,
-            contextSize: 16000,
-            isActive: false,
-          },
-        ],
+        data: defaultModels.OpenAI.map(model => ({
+          ...model,
+          providerId: openAIProvider.id,
+        })),
       });
     }
 
-    if (anthropicProvider) {
+    if (anthropicProvider && defaultModels.Anthropic) {
       await prisma.model.createMany({
-        data: [
-          {
-            name: 'claude-3-haiku',
-            providerId: anthropicProvider.id,
-            contextSize: 200000,
-            isActive: false,
-          },
-          {
-            name: 'claude-3-sonnet',
-            providerId: anthropicProvider.id,
-            contextSize: 200000,
-            isActive: false,
-          },
-          {
-            name: 'claude-3-opus',
-            providerId: anthropicProvider.id,
-            contextSize: 200000,
-            isActive: false,
-          },
-        ],
+        data: defaultModels.Anthropic.map(model => ({
+          ...model,
+          providerId: anthropicProvider.id,
+        })),
       });
     }
 
-    if (googleProvider) {
+    if (googleProvider && defaultModels.Google) {
       await prisma.model.createMany({
-        data: [
-          {
-            name: 'gemini-pro',
-            providerId: googleProvider.id,
-            contextSize: 32000,
-            isActive: false,
-          },
-          {
-            name: 'gemini-ultra',
-            providerId: googleProvider.id,
-            contextSize: 32000,
-            isActive: false,
-          },
-        ],
+        data: defaultModels.Google.map(model => ({
+          ...model,
+          providerId: googleProvider.id,
+        })),
       });
     }
 

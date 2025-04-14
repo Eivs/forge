@@ -4,8 +4,13 @@ import { Model, Provider } from './chatStore';
 interface ModelState {
   models: Model[];
   providers: Provider[];
+  activeModels: Model[];
+  defaultModel: Model | null;
+  defaultModelId: string;
   fetchModels: () => Promise<void>;
   fetchProviders: () => Promise<void>;
+  loadDefaultModel: () => Promise<void>;
+  setDefaultModel: (modelId: string) => Promise<void>;
   createModel: (data: Partial<Model>) => Promise<Model>;
   updateModel: (id: number, data: Partial<Model>) => Promise<Model>;
   deleteModel: (id: number) => Promise<void>;
@@ -19,13 +24,59 @@ interface ModelState {
 export const useModelStore = create<ModelState>(set => ({
   models: [],
   providers: [],
+  activeModels: [],
+  defaultModel: null,
+  defaultModelId: '',
 
   fetchModels: async () => {
     try {
       const models = await window.electron.models.getAll();
-      set({ models });
+      const activeModels = models.filter(model => model.isActive);
+      set({ models, activeModels });
     } catch (error) {
       console.error('Error fetching models:', error);
+    }
+  },
+
+  loadDefaultModel: async () => {
+    try {
+      // 获取激活的模型
+      const { activeModels } = useModelStore.getState();
+      if (activeModels.length === 0) {
+        set({ defaultModel: null, defaultModelId: '' });
+        return;
+      }
+
+      // 尝试从设置中获取默认模型 ID
+      const defaultModelId = await window.electron.settings.getByKey('defaultModelId');
+
+      if (defaultModelId) {
+        // 检查默认模型是否处于激活状态
+        const defaultModel = activeModels.find(m => m.id.toString() === defaultModelId);
+        if (defaultModel) {
+          set({ defaultModel, defaultModelId });
+          return;
+        }
+      }
+
+      // 如果没有设置默认模型或默认模型不活跃，使用第一个活跃模型
+      set({
+        defaultModel: activeModels[0],
+        defaultModelId: activeModels[0].id.toString()
+      });
+    } catch (error) {
+      console.error('Error loading default model:', error);
+    }
+  },
+
+  setDefaultModel: async (modelId) => {
+    try {
+      await window.electron.settings.set('defaultModelId', modelId);
+      const { activeModels } = useModelStore.getState();
+      const defaultModel = activeModels.find(m => m.id.toString() === modelId) || null;
+      set({ defaultModel, defaultModelId: modelId });
+    } catch (error) {
+      console.error('Error setting default model:', error);
     }
   },
 
@@ -78,15 +129,29 @@ export const useModelStore = create<ModelState>(set => ({
   setModelActive: async (id, isActive) => {
     try {
       const updatedModel = await window.electron.models.setActive(id, isActive);
-      set(state => ({
-        models: state.models.map(model => {
+      set(state => {
+        // 更新模型列表
+        const updatedModels = state.models.map(model => {
           if (model.id === id) {
             return updatedModel;
           }
           // 不再禁用同一服务商下的其他模型，允许多选
           return model;
-        }),
-      }));
+        });
+
+        // 更新激活模型列表
+        const updatedActiveModels = updatedModels.filter(model => model.isActive);
+
+        return {
+          models: updatedModels,
+          activeModels: updatedActiveModels,
+        };
+      });
+
+      // 如果激活状态变化，可能需要更新默认模型
+      const { loadDefaultModel } = useModelStore.getState();
+      await loadDefaultModel();
+
       return updatedModel;
     } catch (error) {
       console.error('Error setting model active state:', error);
@@ -144,6 +209,12 @@ export const useModelStore = create<ModelState>(set => ({
           return provider;
         }),
       }));
+
+      // 当提供商激活状态变化时，需要重新加载模型和默认模型
+      const { fetchModels, loadDefaultModel } = useModelStore.getState();
+      await fetchModels();
+      await loadDefaultModel();
+
       return updatedProvider;
     } catch (error) {
       console.error('Error setting provider active state:', error);

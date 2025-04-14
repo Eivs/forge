@@ -57,7 +57,7 @@ export function setupLLMHandlers() {
       for await (const chunk of stream) {
         if (chunk.content) {
           fullContent += chunk.content;
-
+          console.log(fullContent);
           // 将每个块发送到渲染进程
           event.sender.send('llm:stream-chunk', {
             requestId,

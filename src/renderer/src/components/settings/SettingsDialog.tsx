@@ -35,10 +35,18 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     }
   }, [open]);
 
-  const currentProvider = useMemo(
-    () => providers.find(p => p.id === selectedProvider?.id) || providers[0],
-    [providers, selectedProvider?.id]
-  );
+  const currentProvider = useMemo(() => {
+    if (!providers.length) {
+      return null;
+    }
+    if (selectedProvider?.id) {
+      return providers.find(p => p.id === selectedProvider?.id);
+    }
+    if (providers.find(p => p.isActive)) {
+      return providers.find(p => p.isActive);
+    }
+    return providers[0];
+  }, [providers, selectedProvider]);
 
   // Handle provider selection
   const handleSelectProvider = (provider: Provider) => {
@@ -78,7 +86,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             <GeneralSettings />
           </TabsContent>
 
-          <TabsContent value="providers" className="px-4 mb-1 overflow-hidden">
+          <TabsContent value="providers" className="px-4 mb-1 flex-1 overflow-hidden">
             <div className="flex h-full border-t">
               <div className="w-1/4 border-r h-full">
                 <ProviderList
