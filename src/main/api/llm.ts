@@ -18,7 +18,7 @@ export function setupLLMHandlers() {
       const formattedMessages = formatMessagesForLLM(messages);
 
       // 生成完成响应
-      // @ts-expect-error - Disable type checking for now
+      // @ts-expect-error Disable type checking for now
       const response = await model.invoke(formattedMessages);
 
       return response.content;
@@ -40,14 +40,16 @@ export function setupLLMHandlers() {
 
     try {
       const model = await getLLMModel(modelId, temperature, topP, true);
-      console.log(`Got model for streaming: ${model}`);
+      console.log(`Got model for streaming:`, model?.lc_kwargs);
       const formattedMessages = formatMessagesForLLM(messages);
 
       // 使用中止信号创建流
-      // @ts-expect-error - Disable type checking for now
+      // @ts-expect-error Disable type checking for now
       const stream = await model.stream(formattedMessages, {
         signal: abortController.signal,
       });
+
+      console.log(`stream:`, stream);
 
       let fullContent = '';
 
@@ -154,10 +156,10 @@ async function getLLMModel(
         },
       });
 
-    case 'DeepSeek':
-      // DeepSeek 使用 OpenAI 兼容的 API
+    // 根据需要添加其他提供商的处理
+    default:
       console.log(
-        `Using DeepSeek API with baseURL: ${model.provider.baseUrl}, apiKey: ${apiKey ? 'set' : 'not set'}`
+        `Using {model.provider.name} API with baseURL: ${model.provider.baseUrl}, apiKey: ${apiKey ? 'set' : 'not set'}`
       );
       return new ChatOpenAI({
         modelName: model.name,
@@ -169,10 +171,6 @@ async function getLLMModel(
           baseURL: model.provider.baseUrl,
         },
       });
-
-    // 根据需要添加其他提供商的处理
-    default:
-      throw new Error(`Provider ${model.provider.name} is not supported yet`);
   }
 }
 
@@ -193,7 +191,6 @@ function formatMessagesForLLM(messages: any[]) {
   const formattedMessages = [];
 
   if (!hasSystemMessage) {
-    console.log('Adding default system message');
     formattedMessages.push(new SystemMessage(defaultSystemPrompt));
   }
 
@@ -218,7 +215,6 @@ function formatMessagesForLLM(messages: any[]) {
 
   // 尝试强制转换为兼容的格式
   try {
-    // @ts-expect-error - Disable type checking for now
     return formattedMessages;
   } catch (error) {
     console.error('Error converting messages:', error);
