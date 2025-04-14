@@ -48,7 +48,6 @@ const ProviderList = ({ providers, selectedProviderId, onSelectProvider }: Provi
     <div className="h-full flex flex-col">
       <div className="p-2 border-b">
         <div className="flex justify-between items-center">
-          <h3 className="text-sm font-medium">{t.provider.providers}</h3>
           <Button
             size="sm"
             variant="outline"

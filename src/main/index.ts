@@ -4,9 +4,11 @@ import { initializeDatabase } from './database';
 import { setupAPIHandlers } from './api';
 
 // 处理在 Windows 上安装/卸载时创建/删除快捷方式。
-if (await import('electron-squirrel-startup').then(module => module.default)) {
-  app.quit();
-}
+(async () => {
+  if (await import('electron-squirrel-startup').then(module => module.default)) {
+    app.quit();
+  }
+})();
 
 let mainWindow: BrowserWindow | null = null;
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import GeneralSettings from './GeneralSettings';
@@ -35,6 +35,11 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     }
   }, [open]);
 
+  const currentProvider = useMemo(
+    () => providers.find(p => p.id === selectedProvider?.id) || providers[0],
+    [providers, selectedProvider?.id]
+  );
+
   // Handle provider selection
   const handleSelectProvider = (provider: Provider) => {
     setSelectedProvider(provider);
@@ -47,7 +52,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[850px] max-h-[75vh] overflow-hidden p-0">
+      <DialogContent className="sm:max-w-[800px] overflow-hidden p-0">
         <DialogHeader className="px-4 pt-4 pb-1">
           <DialogTitle className="text-base">{t.settings.settings}</DialogTitle>
         </DialogHeader>
@@ -73,19 +78,19 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             <GeneralSettings />
           </TabsContent>
 
-          <TabsContent value="providers" className="flex-1 overflow-hidden">
+          <TabsContent value="providers" className="px-4 mb-1 overflow-hidden">
             <div className="flex h-full border-t">
               <div className="w-1/4 border-r h-full">
                 <ProviderList
                   providers={providers}
-                  selectedProviderId={selectedProvider?.id || null}
+                  selectedProviderId={currentProvider?.id || null}
                   onSelectProvider={handleSelectProvider}
                   onAddProvider={handleAddProvider}
                 />
               </div>
               <div className="w-3/4 p-3 h-full">
                 <ProviderDetail
-                  provider={selectedProvider}
+                  provider={currentProvider}
                   onBack={() => setSelectedProvider(null)}
                 />
               </div>

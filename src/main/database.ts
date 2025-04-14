@@ -137,6 +137,45 @@ async function initializeDefaultSettings(prisma: PrismaClient) {
     const anthropicProvider = await prisma.provider.findFirst({ where: { name: 'Anthropic' } });
     const googleProvider = await prisma.provider.findFirst({ where: { name: 'Google' } });
     const deepSeekProvider = await prisma.provider.findFirst({ where: { name: 'DeepSeek' } });
+    const coresHubProvider = await prisma.provider.findFirst({ where: { name: 'CoresHub' } });
+
+    if (coresHubProvider) {
+      await prisma.model.createMany({
+        data: [
+          {
+            name: 'DeepSeek-V3',
+            providerId: coresHubProvider.id,
+            contextSize: 16000,
+            isActive: true,
+          },
+          {
+            name: 'DeepSeek-R1',
+            providerId: coresHubProvider.id,
+            contextSize: 16000,
+            isActive: true,
+          },
+        ],
+      });
+    }
+
+    if (deepSeekProvider) {
+      await prisma.model.createMany({
+        data: [
+          {
+            name: 'deepseek-chat',
+            providerId: deepSeekProvider.id,
+            contextSize: 32000,
+            isActive: true,
+          },
+          {
+            name: 'deepseek-reasoner',
+            providerId: deepSeekProvider.id,
+            contextSize: 32000,
+            isActive: true,
+          },
+        ],
+      });
+    }
 
     if (openAIProvider) {
       await prisma.model.createMany({
@@ -202,25 +241,6 @@ async function initializeDefaultSettings(prisma: PrismaClient) {
             providerId: googleProvider.id,
             contextSize: 32000,
             isActive: false,
-          },
-        ],
-      });
-    }
-
-    if (deepSeekProvider) {
-      await prisma.model.createMany({
-        data: [
-          {
-            name: 'deepseek-chat',
-            providerId: deepSeekProvider.id,
-            contextSize: 32000,
-            isActive: true,
-          },
-          {
-            name: 'deepseek-reasoner',
-            providerId: deepSeekProvider.id,
-            contextSize: 32000,
-            isActive: true,
           },
         ],
       });

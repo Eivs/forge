@@ -40,9 +40,7 @@ module.exports = {
           muted: 'var(--card-muted)',
         },
         message: {
-          user: 'var(--user-message)',
           'user-foreground': 'var(--user-message-foreground)',
-          assistant: 'var(--assistant-message)',
           'assistant-foreground': 'var(--assistant-message-foreground)',
         },
         shadow: 'var(--shadow)',

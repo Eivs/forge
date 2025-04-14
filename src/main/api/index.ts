@@ -314,20 +314,6 @@ export function setupAPIHandlers() {
       throw new Error('Model not found');
     }
 
-    // 如果激活此模型，则停用来自同一提供商的其他模型
-    if (isActive) {
-      await prisma.model.updateMany({
-        where: {
-          providerId: model.providerId,
-          id: { not: id },
-        },
-        data: {
-          isActive: false,
-          updatedAt: new Date(),
-        },
-      });
-    }
-
     await prisma.model.update({
       where: { id },
       data: { isActive, updatedAt: new Date() },
@@ -382,22 +368,25 @@ export function setupAPIHandlers() {
   ipcMain.handle('providers:delete', async (_, id: number) => {
     const prisma = getDatabase();
     await prisma.provider.delete({ where: { id } });
+    await prisma.model.deleteMany({ where: { providerId: id } });
   });
 
   ipcMain.handle('providers:setActive', async (_, id: number, isActive: boolean) => {
     const prisma = getDatabase();
 
-    // 如果激活此提供商，则停用所有其他提供商
-    if (isActive) {
-      await prisma.provider.updateMany({
-        where: { id: { not: id } },
-        data: { isActive: false, updatedAt: new Date() },
-      });
-    }
-
     await prisma.provider.update({
       where: { id },
       data: { isActive, updatedAt: new Date() },
+    });
+
+    await prisma.model.updateMany({
+      where: {
+        providerId: id,
+      },
+      data: {
+        isActive: isActive,
+        updatedAt: new Date(),
+      },
     });
 
     return prisma.provider.findUnique({ where: { id } });

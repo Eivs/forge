@@ -45,8 +45,6 @@
     --ring: #0066ff;
 
     /* 消息气泡 */
-    --user-message: #e9f2ff;
-    --user-message-foreground: #1a1a1a;
     --assistant-message: #ffffff;
     --assistant-message-foreground: #1a1a1a;
 
@@ -100,8 +98,6 @@
     --ring: #3b82f6;
 
     /* 消息气泡 */
-    --user-message: #2e3a59;
-    --user-message-foreground: #ffffff;
     --assistant-message: #1e293b;
     --assistant-message-foreground: #ffffff;
 
@@ -159,23 +155,15 @@
 
   /* 消息气泡样式 */
   .user-message {
-    background-color: var(--user-message);
     color: var(--user-message-foreground);
-    border-radius: var(--radius-lg);
-    padding: 1rem;
+    padding: 0.6rem;
     margin-left: auto;
-    margin-bottom: 1rem;
-    box-shadow: 0 1px 2px var(--shadow);
   }
 
   .assistant-message {
-    background-color: var(--assistant-message);
     color: var(--assistant-message-foreground);
-    border-radius: var(--radius-lg);
-    padding: 1rem;
+    padding: 0.6rem;
     margin-right: auto;
-    margin-bottom: 1rem;
-    box-shadow: 0 1px 2px var(--shadow);
   }
 
   /* 输入框样式 */

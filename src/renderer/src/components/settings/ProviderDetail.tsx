@@ -89,6 +89,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
     try {
       await setProviderActive(provider.id, isActive);
       await fetchProviders();
+      await fetchModels();
     } catch (error) {
       console.error('Error toggling provider active state:', error);
     }
@@ -195,14 +196,11 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
               </Button>
             </div>
           </div>
-          <CompactCardDescription>
-            {provider.isActive ? t.common.enabled : t.common.disabled}
-          </CompactCardDescription>
         </CompactCardHeader>
         <CompactCardContent>
           <div className="space-y-1 text-xs">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">API URL:</span>
+              <span className="text-muted-foreground">API Url:</span>
               <span className="text-xs truncate max-w-[200px]">{provider.baseUrl}</span>
             </div>
             <div className="flex justify-between">
@@ -265,15 +263,12 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                       </Button>
                     </div>
                   </div>
-                  <CompactCardDescription>
-                    {model.isActive ? t.common.enabled : t.common.disabled}
-                  </CompactCardDescription>
                 </CompactCardHeader>
                 <CompactCardContent>
                   <div className="text-xs">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">{model.contextSize}:</span>
-                      <span>{model.contextSize.toLocaleString()} tokens</span>
+                      <span className="text-muted-foreground">{t.model.contextSize}:</span>
+                      <span>{model.contextSize.toLocaleString()}</span>
                     </div>
                   </div>
                 </CompactCardContent>

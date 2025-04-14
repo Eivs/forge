@@ -32,6 +32,7 @@ export const useModelStore = create<ModelState>(set => ({
   fetchProviders: async () => {
     try {
       const providers = await window.electron.providers.getAll();
+
       set({ providers });
     } catch (error) {
       console.error('Error fetching providers:', error);

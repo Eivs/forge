@@ -63,7 +63,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
   fetchChats: async () => {
     try {
       const chats = await window.electron.chats.getAll();
-      console.log(chats);
       set({ chats });
     } catch (error) {
       console.error('Error fetching chats:', error);
@@ -175,7 +174,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
         topP: activeChat.topP,
       };
 
-      // 为助手响应创建一个占位消息
       tempMessage = await get().addMessage(chatId, {
         role: 'assistant',
         content: '',
