@@ -5,7 +5,7 @@ import {
   CompactCardHeader,
   CompactCardTitle,
 } from './CompactCard';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Select } from 'reablocks';
 import { useLanguage, Language } from '../../locales';
 import { useModelStore } from '../../store/modelStore';
 import { useEffect } from 'react';
@@ -46,15 +46,15 @@ const GeneralSettings = () => {
         </CompactCardHeader>
         <CompactCardContent className="space-y-3">
           <div className="space-y-1">
-            <Select value={theme} onValueChange={handleThemeChange}>
-              <SelectTrigger id="theme" className="h-8 text-xs">
-                <SelectValue placeholder={t.settings.selectTheme} />
-              </SelectTrigger>
-              <SelectContent className="text-xs">
-                <SelectItem value="light">{t.settings.light}</SelectItem>
-                <SelectItem value="dark">{t.settings.dark}</SelectItem>
-                <SelectItem value="system">{t.settings.system}</SelectItem>
-              </SelectContent>
+            <Select
+              value={theme}
+              onChange={handleThemeChange}
+              placeholder={t.settings.selectTheme}
+              className="h-8 text-xs"
+            >
+              <option value="light">{t.settings.light}</option>
+              <option value="dark">{t.settings.dark}</option>
+              <option value="system">{t.settings.system}</option>
             </Select>
           </div>
         </CompactCardContent>
@@ -66,14 +66,14 @@ const GeneralSettings = () => {
         </CompactCardHeader>
         <CompactCardContent>
           <div className="space-y-1">
-            <Select value={language} onValueChange={handleLanguageChange}>
-              <SelectTrigger id="language" className="h-8 text-xs">
-                <SelectValue placeholder={t.settings.selectLanguage} />
-              </SelectTrigger>
-              <SelectContent className="text-xs">
-                <SelectItem value="zh">{t.settings.chinese}</SelectItem>
-                <SelectItem value="en">{t.settings.english}</SelectItem>
-              </SelectContent>
+            <Select
+              value={language}
+              onChange={handleLanguageChange}
+              placeholder={t.settings.selectLanguage}
+              className="h-8 text-xs"
+            >
+              <option value="zh">{t.settings.chinese}</option>
+              <option value="en">{t.settings.english}</option>
             </Select>
           </div>
         </CompactCardContent>
@@ -86,17 +86,17 @@ const GeneralSettings = () => {
         <CompactCardContent>
           <div className="space-y-1">
             {activeModels.length > 0 ? (
-              <Select value={defaultModelId} onValueChange={handleDefaultModelChange}>
-                <SelectTrigger id="defaultModel" className="h-8 text-xs">
-                  <SelectValue placeholder={t.settings.selectDefaultModel} />
-                </SelectTrigger>
-                <SelectContent className="text-xs">
-                  {activeModels.map(model => (
-                    <SelectItem key={model.id} value={model.id.toString()}>
-                      {model.name} ({model.provider.name})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+              <Select
+                value={defaultModelId}
+                onChange={handleDefaultModelChange}
+                placeholder={t.settings.selectDefaultModel}
+                className="h-8 text-xs"
+              >
+                {activeModels.map(model => (
+                  <option key={model.id} value={model.id.toString()}>
+                    {model.name} ({model.provider.name})
+                  </option>
+                ))}
               </Select>
             ) : (
               <div className="text-xs text-muted-foreground p-2 bg-muted rounded-md">

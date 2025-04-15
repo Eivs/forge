@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
+import { Dialog } from 'reablocks';
+import { Button } from '../ui/button-reablocks';
+import { Input } from 'reablocks';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Slider } from '../ui/slider';
 import { useChatStore } from '../../store/chatStore';
 import { useModelStore } from '../../store/modelStore';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Select } from 'reablocks';
 import { useLanguage } from '../../locales';
 
 interface ChatSettingsDialogProps {
@@ -69,12 +69,23 @@ const ChatSettingsDialog = ({ open, onOpenChange, chatId }: ChatSettingsDialogPr
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{t.chat.settings}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
+    <Dialog
+      open={open}
+      onClose={() => onOpenChange(false)}
+      header={t.chat.settings}
+      className="sm:max-w-[500px]"
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {t.common.cancel}
+          </Button>
+          <Button onClick={handleSave} disabled={isLoading}>
+            {isLoading ? t.common.saving : t.common.save}
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="title">{t.chat.title}</Label>
             <Input
@@ -89,20 +100,17 @@ const ChatSettingsDialog = ({ open, onOpenChange, chatId }: ChatSettingsDialogPr
             <Label htmlFor="model">{t.model.model}</Label>
             <Select
               value={modelId?.toString() || ''}
-              onValueChange={(value: string) => setModelId(parseInt(value))}
+              onChange={(value: string) => setModelId(parseInt(value))}
+              placeholder={t.model.selectModel}
+              id="model"
             >
-              <SelectTrigger id="model">
-                <SelectValue placeholder={t.model.selectModel} />
-              </SelectTrigger>
-              <SelectContent>
-                {models
-                  .filter(m => m.isActive)
-                  .map(model => (
-                    <SelectItem key={model.id} value={model.id.toString()}>
-                      {model.name} ({model.provider.name})
-                    </SelectItem>
-                  ))}
-              </SelectContent>
+              {models
+                .filter(m => m.isActive)
+                .map(model => (
+                  <option key={model.id} value={model.id.toString()}>
+                    {model.name} ({model.provider.name})
+                  </option>
+                ))}
             </Select>
           </div>
 
@@ -151,15 +159,6 @@ const ChatSettingsDialog = ({ open, onOpenChange, chatId }: ChatSettingsDialogPr
             <p className="text-xs text-muted-foreground">{t.model.topPDescription}</p>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t.common.cancel}
-          </Button>
-          <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? t.common.saving : t.common.save}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
     </Dialog>
   );
 };

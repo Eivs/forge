@@ -1,10 +1,12 @@
+@import 'tailwindcss/base';
+
 @import '@radix-ui/themes/styles.css';
 @import './fonts.css';
 @import './reachat.css';
+/* @import "tailwindcss"; */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 @layer base {
   :root {

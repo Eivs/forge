@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Dialog } from 'reablocks';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs-reablocks';
 import GeneralSettings from './GeneralSettings';
 import MCPSettings from './MCPSettings';
 import ProviderList from './ProviderList';
@@ -59,11 +59,12 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] overflow-hidden p-0">
-        <DialogHeader className="px-4 pt-4 pb-1">
-          <DialogTitle className="text-base">{t.settings.settings}</DialogTitle>
-        </DialogHeader>
+    <Dialog
+      open={open}
+      onClose={() => onOpenChange(false)}
+      header={t.settings.settings}
+      className="sm:max-w-[800px] overflow-hidden p-0"
+    >
 
         <Tabs
           value={activeTab}
@@ -109,7 +110,6 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             <MCPSettings />
           </TabsContent>
         </Tabs>
-      </DialogContent>
     </Dialog>
   );
 };

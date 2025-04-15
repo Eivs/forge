@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
-import { ThemeProvider } from './components/theme-provider';
 import Sidebar from './components/sidebar/Sidebar';
 import ChatWindow from './components/chat/ChatWindow';
-import { useThemeStore } from './store/themeStore';
+import { useThemeStore, useSystemTheme } from './store/themeStore';
 import { useChatStore } from './store/chatStore';
 import { LanguageProvider, useLanguage } from './locales';
+import { ThemeProvider } from 'reablocks';
+import { lightTheme, darkTheme } from './styles/reablocks-theme';
+import { Chat, ChatInput, SessionMessagePanel } from 'reachat';
+import { chatsToSessions } from './adapters/reachatAdapter';
+import { chatTheme } from './styles/reachat-theme';
 
 // 欢迎屏幕组件
 const WelcomeScreen = () => {
@@ -19,9 +23,61 @@ const WelcomeScreen = () => {
 };
 
 function App() {
-  const { setTheme } = useThemeStore();
-  const { activeChat, fetchChats } = useChatStore();
+  const { theme, setTheme } = useThemeStore();
+  // 使用 useSystemTheme hook 来监听系统主题变化
+  const systemTheme = useSystemTheme();
+  const {
+    chats,
+    activeChat,
+    setActiveChat,
+    fetchChats,
+    isGenerating,
+    abortGeneration,
+    addMessage,
+    generateResponse,
+  } = useChatStore();
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
+
+  // 将当前的聊天数据转换为 reachat 期望的格式
+  const sessions = chatsToSessions(chats);
+  const activeSessionId = activeChat ? activeChat.id.toString() : undefined;
+
+  // 处理发送消息
+  const handleSendMessage = async (message: string) => {
+    if (!activeChat) return;
+
+    // 添加用户消息
+    await addMessage(activeChat.id, { role: 'user', content: message });
+
+    // 生成回复
+    await generateResponse(activeChat.id);
+  };
+
+  // 处理停止生成
+  const handleStopMessage = () => {
+    abortGeneration();
+  };
+
+  const handleSelectSession = (sessionId: string) => {
+    const chat = chats.find(c => c.id.toString() === sessionId);
+    if (chat) {
+      setActiveChat(chat);
+    }
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    if (
+      confirm(
+        t.common.deleteConfirmation.replace(
+          '{name}',
+          chats.find(c => c.id.toString() === sessionId)?.title || ''
+        )
+      )
+    ) {
+      await window.electron.chats.delete(parseInt(sessionId));
+    }
+  };
 
   useEffect(() => {
     const initApp = async () => {
@@ -56,13 +112,30 @@ function App() {
     );
   }
 
+  // 根据当前主题选择对应的 reablocks 主题
+  const currentTheme =
+    theme === 'dark' || (theme === 'system' && systemTheme === 'dark') ? darkTheme : lightTheme;
+
   return (
     <LanguageProvider>
-      <ThemeProvider defaultTheme="system" storageKey="forge-ui-theme">
-        <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+      <ThemeProvider theme={currentTheme}>
+          <Chat
+          sessions={sessions}
+          activeSessionId={activeSessionId}
+          viewType="console"
+          isLoading={isGenerating}
+          onSendMessage={handleSendMessage}
+          onStopMessage={handleStopMessage}
+          onSelectSession={handleSelectSession}
+          onDeleteSession={handleDeleteSession}
+          theme={chatTheme}
+        >
           <Sidebar />
-          {activeChat ? <ChatWindow /> : <WelcomeScreen />}
-        </div>
+          <SessionMessagePanel>
+            {activeChat ? <ChatWindow /> : <WelcomeScreen />}
+            <ChatInput placeholder={t.chat.typeMessage || 'Type a message...'} />
+          </SessionMessagePanel>
+        </Chat>
       </ThemeProvider>
     </LanguageProvider>
   );

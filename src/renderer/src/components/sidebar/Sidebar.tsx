@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useTheme } from '../theme-provider';
 import { useChatStore } from '../../store/chatStore';
 import { useModelStore } from '../../store/modelStore';
-import ChatList from './ChatList';
-import { Button } from '../ui/button';
-import { Settings, Plus, Sun, Moon, MonitorSmartphone } from 'lucide-react';
+import ChatList from './ChatList-reachat';
+
+import { Button } from '../ui/button-reablocks';
+import { Settings, Sun, Moon, MonitorSmartphone } from 'lucide-react';
 
 import SettingsDialog from '../settings/SettingsDialog';
 import { useLanguage } from '../../locales';
@@ -43,19 +44,17 @@ const Sidebar = () => {
 
   return (
     <div className="flex flex-col h-full w-64 border-r border-border bg-card shadow-md">
-      <div className="p-4 border-b border-border bg-card-muted">
-        <Button
-          onClick={handleNewChat}
-          className="w-full justify-start gap-2 shadow-sm hover:shadow transition-all"
-          disabled={!defaultModel}
-          variant="default"
-        >
-          <Plus size={18} />
-          {t.chat.newChat}
-        </Button>
-      </div>
-
       <div className="flex-1 overflow-y-auto p-3">
+        <div className="mb-4">
+          <Button
+            onClick={handleNewChat}
+            className="w-full justify-start gap-2 shadow-sm hover:shadow transition-all"
+            disabled={!defaultModel}
+            variant="default"
+          >
+            {t.chat.newChat}
+          </Button>
+        </div>
         <ChatList />
       </div>
 
