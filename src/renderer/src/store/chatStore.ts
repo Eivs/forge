@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+// 将接口定义移到单独的类型文件中
 export interface Message {
   id: number;
   role: 'system' | 'user' | 'assistant';
@@ -35,7 +36,6 @@ export interface Provider {
   isActive: boolean;
 }
 
-// 用于更新聊天的接口，包含 modelId 字段
 interface ChatUpdateData extends Partial<Chat> {
   modelId?: number;
 }
@@ -55,6 +55,20 @@ interface ChatState {
   abortGeneration: () => Promise<void>;
 }
 
+// 抽取错误处理逻辑
+const handleError = (error: unknown, message: string): never => {
+  console.error(message, error);
+  throw error;
+};
+
+// 抽取消息更新逻辑
+const updateMessageInChat = (chat: Chat, messageId: number, newContent: string): Chat => ({
+  ...chat,
+  messages: chat.messages.map(msg =>
+    msg.id === messageId ? { ...msg, content: newContent } : msg
+  ),
+});
+
 export const useChatStore = create<ChatState>((set, get) => ({
   chats: [],
   activeChat: null,
@@ -65,7 +79,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const chats = await window.electron.chats.getAll();
       set({ chats });
     } catch (error) {
-      console.error('Error fetching chats:', error);
+      handleError(error, 'Error fetching chats:');
     }
   },
 
@@ -74,11 +88,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
   createChat: async data => {
     try {
       const chat = await window.electron.chats.create(data);
-      set(state => ({ chats: [...state.chats, chat], activeChat: chat }));
+      set(state => ({
+        chats: [...state.chats, chat],
+        activeChat: chat,
+      }));
       return chat;
     } catch (error) {
-      console.error('Error creating chat:', error);
-      throw error;
+      handleError(error, 'Error creating chat:');
     }
   },
 
@@ -91,8 +107,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
       return updatedChat;
     } catch (error) {
-      console.error('Error updating chat:', error);
-      throw error;
+      handleError(error, 'Error updating chat:');
     }
   },
 
@@ -104,8 +119,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         activeChat: state.activeChat?.id === id ? null : state.activeChat,
       }));
     } catch (error) {
-      console.error('Error deleting chat:', error);
-      throw error;
+      handleError(error, 'Error deleting chat:');
     }
   },
 
@@ -118,8 +132,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
       return updatedChat;
     } catch (error) {
-      console.error('Error renaming chat:', error);
-      throw error;
+      handleError(error, 'Error renaming chat:');
     }
   },
 
@@ -131,15 +144,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       });
 
       set(state => ({
-        chats: state.chats.map(chat => {
-          if (chat.id === chatId) {
-            return {
-              ...chat,
-              messages: [...chat.messages, newMessage],
-            };
-          }
-          return chat;
-        }),
+        chats: state.chats.map(chat =>
+          chat.id === chatId ? { ...chat, messages: [...chat.messages, newMessage] } : chat
+        ),
         activeChat:
           state.activeChat?.id === chatId
             ? { ...state.activeChat, messages: [...state.activeChat.messages, newMessage] }
@@ -148,8 +155,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       return newMessage;
     } catch (error) {
-      console.error('Error adding message:', error);
-      throw error;
+      handleError(error, 'Error adding message:');
     }
   },
 
@@ -157,15 +163,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const { activeChat } = get();
 
     if (!activeChat || activeChat.id !== chatId) {
-      console.error('No active chat or chat ID does not match');
-      return;
+      throw new Error('No active chat or chat ID does not match');
     }
 
     set({ isGenerating: true });
-
-    // 为助手响应创建一个占位消息
-    let tempMessage: any = null;
-    let chunk: (() => void) | undefined = undefined;
+    let tempMessage: Message | null = null;
+    let cleanupChunkEvent: (() => void) | undefined;
 
     try {
       const messages = activeChat.messages.map(({ role, content }) => ({ role, content }));
@@ -179,116 +182,68 @@ export const useChatStore = create<ChatState>((set, get) => ({
         role: 'assistant',
         content: '',
       });
-      console.log('Temporary message created:', tempMessage);
 
       let fullContent = '';
 
-      // 监听流式响应
-      const handleChunk = (data: any) => {
+      const handleChunk = (data: { content: string; done?: boolean; error?: boolean }) => {
         fullContent += data.content;
-        // 更新UI
+
         set(state => ({
-          chats: state.chats.map(chat => {
-            if (chat.id === chatId) {
-              return {
-                ...chat,
-                messages: chat.messages.map(msg => {
-                  if (msg.id === tempMessage.id) {
-                    return { ...msg, content: fullContent };
-                  }
-                  return msg;
-                }),
-              };
-            }
-            return chat;
-          }),
+          chats: state.chats.map(chat =>
+            chat.id === chatId ? updateMessageInChat(chat, tempMessage!.id, fullContent) : chat
+          ),
           activeChat:
             state.activeChat?.id === chatId
-              ? {
-                  ...state.activeChat,
-                  messages: state.activeChat.messages.map(msg => {
-                    if (msg.id === tempMessage.id) {
-                      return { ...msg, content: fullContent };
-                    }
-                    return msg;
-                  }),
-                }
+              ? updateMessageInChat(state.activeChat, tempMessage!.id, fullContent)
               : state.activeChat,
         }));
-        console.log('Received chunk:', data);
+
         if (data.done || data.error) {
           set({ isGenerating: false });
-          if (typeof chunk === 'function') chunk();
+          if (cleanupChunkEvent) cleanupChunkEvent();
+        }
+        if (data.done) {
+          try {
+            window.electron.messages.update(tempMessage!.id, { content: fullContent });
+          } catch (dbError) {
+            console.error('Error updating message in database:', dbError);
+          }
         }
       };
 
-      chunk = window.electron.llm.streamChunk(handleChunk);
-      console.log('Starting streaming LLM response');
-
-      // 获取流式响应
+      cleanupChunkEvent = window.electron.llm.streamChunk(handleChunk);
       const response = await window.electron.llm.streamChat(messages, modelParams);
 
       if (response.error) {
-        set({ isGenerating: false });
-        if (typeof chunk === 'function') chunk();
+        if (cleanupChunkEvent) cleanupChunkEvent();
         throw new Error(response.error);
       }
-    } catch (error: any) {
-      console.error('Error generating response:', error);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'UNKNOWN_ERROR';
+      const errorContent = `**ERROR_TITLE:** ${errorMessage}\n\nERROR_HINT`;
 
-      // Update the message with the error information
-      const errorContent = `**错误:** ${error?.message || '未知错误'}\n\n请检查以下可能的问题:\n- API 密钥是否已配置\n- 网络连接是否正常\n- 服务提供商是否可用`;
-
-      // If we have a temporary message, update it with the error
       if (tempMessage) {
-        // Update the message in the UI and database
         set(state => ({
           isGenerating: false,
-          chats: state.chats.map(chat => {
-            if (chat.id === chatId) {
-              return {
-                ...chat,
-                messages: chat.messages.map(msg => {
-                  if (msg.id === tempMessage.id) {
-                    return { ...msg, content: errorContent };
-                  }
-                  return msg;
-                }),
-              };
-            }
-            return chat;
-          }),
+          chats: state.chats.map(chat =>
+            chat.id === chatId ? updateMessageInChat(chat, tempMessage!.id, errorContent) : chat
+          ),
           activeChat:
             state.activeChat?.id === chatId
-              ? {
-                  ...state.activeChat,
-                  messages: state.activeChat.messages.map(msg => {
-                    if (msg.id === tempMessage.id) {
-                      return { ...msg, content: errorContent };
-                    }
-                    return msg;
-                  }),
-                }
+              ? updateMessageInChat(state.activeChat, tempMessage!.id, errorContent)
               : state.activeChat,
         }));
 
-        // Update the message in the database
         try {
           await window.electron.messages.update(tempMessage.id, { content: errorContent });
         } catch (dbError) {
           console.error('Error updating message in database:', dbError);
         }
       } else {
-        // If we don't have a temporary message, create a new one with the error
-        try {
-          await get().addMessage(chatId, {
-            role: 'assistant',
-            content: errorContent,
-          });
-        } catch (addError) {
-          console.error('Error adding error message:', addError);
-        }
-
+        await get().addMessage(chatId, {
+          role: 'assistant',
+          content: errorContent,
+        });
         set({ isGenerating: false });
       }
     }
@@ -299,7 +254,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       await window.electron.llm.abortGeneration();
       set({ isGenerating: false });
     } catch (error) {
-      console.error('Error aborting generation:', error);
+      handleError(error, 'Error aborting generation:');
     }
   },
 }));

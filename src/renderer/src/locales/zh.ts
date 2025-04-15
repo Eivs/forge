@@ -88,4 +88,11 @@ export default {
     connected: '已连接',
     connectedDescription: '成功连接到 MCP 服务器',
   },
+  errors: {
+    title: '错误',
+    unknown: '未知错误',
+    generation: '错误: {message}',
+    generationHint:
+      '请检查以下可能的问题:\n- API 密钥是否已配置\n- 网络连接是否正常\n- 服务提供商是否可用',
+  },
 };

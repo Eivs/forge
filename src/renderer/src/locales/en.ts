@@ -90,4 +90,11 @@ export default {
     connected: 'Connected',
     connectedDescription: 'Successfully connected to MCP server',
   },
+  errors: {
+    title: 'Error',
+    unknown: 'Unknown error',
+    generation: 'Error: {message}',
+    generationHint:
+      'Please check the following possible issues:\n- API key is configured correctly\n- Network connection is stable\n- Service provider is available',
+  },
 };

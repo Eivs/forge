@@ -79,15 +79,20 @@ contextBridge.exposeInMainWorld('electron', {
         };
       }
     },
-    streamChunk: (callback: (arg0: any) => void) => {
-      ipcRenderer.on('llm:stream-chunk', (_, data) => {
+    streamChunk: (callback: (data: any) => void) => {
+      const handleChunk = (_: any, data: any) => {
         callback({
-          type: 'content',
+          type: data.error ? 'error' : 'content',
           ...data,
         });
-      });
+      };
+
+      // 添加监听器
+      ipcRenderer.on('llm:stream-chunk', handleChunk);
+
+      // 返回清理函数，只移除特定的监听器
       return () => {
-        ipcRenderer.removeAllListeners('llm:stream-chunk');
+        ipcRenderer.removeListener('llm:stream-chunk', handleChunk);
       };
     },
     abortGeneration: () => ipcRenderer.invoke('llm:abortGeneration'),
