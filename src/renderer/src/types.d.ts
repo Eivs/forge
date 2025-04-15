@@ -51,7 +51,8 @@ declare global {
       // LLM 相关 API
       llm: {
         chat: (messages: any[], modelParams: any) => Promise<any>;
-        streamChat: (messages: any[], modelParams: any) => ;
+        streamChat: (messages: any[], modelParams: any) => Promise<any>;
+        streamChunk: (callback: (data: any) => void) => () => void;
         abortGeneration: () => Promise<void>;
       };
 

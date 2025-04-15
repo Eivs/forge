@@ -165,6 +165,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     // 为助手响应创建一个占位消息
     let tempMessage: any = null;
+    let chunk: (() => void) | undefined = undefined;
 
     try {
       const messages = activeChat.messages.map(({ role, content }) => ({ role, content }));
@@ -178,60 +179,59 @@ export const useChatStore = create<ChatState>((set, get) => ({
         role: 'assistant',
         content: '',
       });
+      console.log('Temporary message created:', tempMessage);
 
-      // 使用流式响应
-      try {
-        console.log('Starting streaming LLM response');
+      let fullContent = '';
 
-        // 获取流式响应
-        console.log('Getting stream from window.electron.llm.streamChat');
-        const stream = window.electron.llm.streamChat(messages, modelParams);
-        console.log('Got stream object:', stream);
-        let fullContent = '';
-
-        // 监听流式响应
-        console.log('Setting stream.onmessage handler');
-        stream.onMessage = async event => {
-          console.log('Received message event:', event);
-          if (event.data.type === 'content') {
-            // 更新内容
-            fullContent = event.data.content;
-            console.log('Updating content:', fullContent);
-
-            // 更新UI
-            set(state => ({
-              chats: state.chats.map(chat => {
-                if (chat.id === chatId) {
-                  return {
-                    ...chat,
-                    messages: chat.messages.map(msg => {
-                      if (msg.id === tempMessage.id) {
-                        return { ...msg, content: fullContent };
-                      }
-                      return msg;
-                    }),
-                  };
-                }
-                return chat;
-              }),
-              activeChat:
-                state.activeChat?.id === chatId
-                  ? {
-                      ...state.activeChat,
-                      messages: state.activeChat.messages.map(msg => {
-                        if (msg.id === tempMessage.id) {
-                          return { ...msg, content: fullContent };
-                        }
-                        return msg;
-                      }),
+      // 监听流式响应
+      const handleChunk = (data: any) => {
+        fullContent += data.content;
+        // 更新UI
+        set(state => ({
+          chats: state.chats.map(chat => {
+            if (chat.id === chatId) {
+              return {
+                ...chat,
+                messages: chat.messages.map(msg => {
+                  if (msg.id === tempMessage.id) {
+                    return { ...msg, content: fullContent };
+                  }
+                  return msg;
+                }),
+              };
+            }
+            return chat;
+          }),
+          activeChat:
+            state.activeChat?.id === chatId
+              ? {
+                  ...state.activeChat,
+                  messages: state.activeChat.messages.map(msg => {
+                    if (msg.id === tempMessage.id) {
+                      return { ...msg, content: fullContent };
                     }
-                  : state.activeChat,
-            }));
-          }
-        };
-      } catch (error) {
-        console.error('Error setting up stream:', error);
-        // ... 错误处理代码 ...
+                    return msg;
+                  }),
+                }
+              : state.activeChat,
+        }));
+        console.log('Received chunk:', data);
+        if (data.done || data.error) {
+          set({ isGenerating: false });
+          if (typeof chunk === 'function') chunk();
+        }
+      };
+
+      chunk = window.electron.llm.streamChunk(handleChunk);
+      console.log('Starting streaming LLM response');
+
+      // 获取流式响应
+      const response = await window.electron.llm.streamChat(messages, modelParams);
+
+      if (response.error) {
+        set({ isGenerating: false });
+        if (typeof chunk === 'function') chunk();
+        throw new Error(response.error);
       }
     } catch (error: any) {
       console.error('Error generating response:', error);

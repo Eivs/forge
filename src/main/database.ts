@@ -3,7 +3,7 @@ import { getPrismaClient } from './prisma';
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
-import { defaultProviders, defaultModels, defaultUser, defaultSettings } from './defaultData';
+import { defaultProviders, defaultModels, defaultUser, defaultSettings } from './initialState';
 
 export async function initializeDatabase() {
   try {
@@ -117,51 +117,28 @@ async function initializeDefaultModels(prisma: PrismaClient) {
     const deepSeekProvider = await prisma.provider.findFirst({ where: { name: 'DeepSeek' } });
     const coresHubProvider = await prisma.provider.findFirst({ where: { name: 'CoresHub' } });
 
-    // 使用默认模型数据创建模型
-    if (coresHubProvider && defaultModels.CoresHub) {
-      await prisma.model.createMany({
-        data: defaultModels.CoresHub.map(model => ({
-          ...model,
-          providerId: coresHubProvider.id,
-        })),
-      });
-    }
+    // 使用 Map 存储 provider-models 的对应关系
+    const providerModelMap = {
+      CoresHub: coresHubProvider,
+      DeepSeek: deepSeekProvider,
+      OpenAI: openAIProvider,
+      Anthropic: anthropicProvider,
+      Google: googleProvider,
+    };
 
-    if (deepSeekProvider && defaultModels.DeepSeek) {
-      await prisma.model.createMany({
-        data: defaultModels.DeepSeek.map(model => ({
-          ...model,
-          providerId: deepSeekProvider.id,
-        })),
-      });
-    }
-
-    if (openAIProvider && defaultModels.OpenAI) {
-      await prisma.model.createMany({
-        data: defaultModels.OpenAI.map(model => ({
-          ...model,
-          providerId: openAIProvider.id,
-        })),
-      });
-    }
-
-    if (anthropicProvider && defaultModels.Anthropic) {
-      await prisma.model.createMany({
-        data: defaultModels.Anthropic.map(model => ({
-          ...model,
-          providerId: anthropicProvider.id,
-        })),
-      });
-    }
-
-    if (googleProvider && defaultModels.Google) {
-      await prisma.model.createMany({
-        data: defaultModels.Google.map(model => ({
-          ...model,
-          providerId: googleProvider.id,
-        })),
-      });
-    }
+    // 批量创建所有提供商的模型
+    await Promise.all(
+      Object.entries(providerModelMap).map(async ([providerName, provider]) => {
+        if (provider && defaultModels[providerName as keyof typeof defaultModels]) {
+          await prisma.model.createMany({
+            data: defaultModels[providerName as keyof typeof defaultModels].map(model => ({
+              ...model,
+              providerId: provider.id,
+            })),
+          });
+        }
+      })
+    );
 
     console.log('Default models have been initialized');
   }

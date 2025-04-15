@@ -77,8 +77,9 @@ forge/
 │   │   │   ├── llm.ts       # LLM 相关 API
 │   │   │   └── mcp.ts       # MCP 协议相关 API
 │   │   ├── database.ts      # 数据库初始化和管理
+│   │   ├── initialState.ts  # 默认数据和设置
 │   │   ├── prisma.ts        # Prisma 客户端管理
-│   │   └── index.ts         # 主进程入口
+│   │   └── main.ts         # 主进程入口
 │   │
 │   ├── renderer/            # Electron 渲染进程
 │   │   ├── src/
@@ -102,6 +103,9 @@ forge/
 │
 ├── electron-vite.config.ts  # electron-vite 配置
 ├── vite.config.ts          # Vite 配置
+├── postcss.config.js       # PostCSS 配置
+├── eslint.config.js        # ESLint 配置
+├── prettier.config.js      # Prettier 配置
 ├── tailwind.config.js      # Tailwind CSS 配置
 ├── tsconfig.json           # TypeScript 配置
 └── package.json            # 项目依赖和脚本

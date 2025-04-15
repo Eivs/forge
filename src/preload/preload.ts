@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+// 在 Electron 的渲染进程中，通过 contextBridge.exposeInMainWorld 方法将 API 暴露给渲染进程
 contextBridge.exposeInMainWorld('electron', {
   // 聊天相关 API
   chats: {
@@ -54,103 +55,40 @@ contextBridge.exposeInMainWorld('electron', {
     chat: (messages: any[], modelParams: any) =>
       ipcRenderer.invoke('llm:chat', messages, modelParams),
     // 流式对话
-    streamChat: (messages: any[], modelParams: any) => {
-      console.log('Creating stream object');
+    streamChat: async (messages: any[], modelParams: any) => {
+      try {
+        // 发起请求前设置监听器
+        const result = await ipcRenderer.invoke('llm:streamChat', { messages, modelParams });
+        const { success } = result;
 
-      // 创建一个 EventEmitter 风格的对象
-      const stream = {
-        _onmessage: (_?: any) => {},
-        set onMessage(handler) {
-          console.log('Setting onmessage handler:', handler);
-          this._onmessage = handler;
-        },
-        get onMessage() {
-          return this._onmessage;
-        },
-      };
-
-      // 立即调用主进程的 streamChat 方法
-      ipcRenderer
-        .invoke('llm:streamChat', { messages, modelParams })
-        .then(result => {
-          console.log('Stream setup result:', result);
-          if (!result.success) {
-            if (stream._onmessage) {
-              stream._onmessage({
-                data: {
-                  type: 'error',
-                  error: '无法创建流式连接',
-                },
-              });
-            }
-            return;
-          }
-
-          const { requestId } = result;
-
-          // 设置监听器
-          const chunkListener = (_: any, data: any) => {
-            if (data.requestId !== requestId) return;
-            console.log('Received chunk:', data);
-            if (stream._onmessage) {
-              stream._onmessage({
-                data: {
-                  type: 'content',
-                  content: data.fullContent,
-                },
-              });
-            }
+        if (!success) {
+          return {
+            type: 'error' as const,
+            error: 'Unable to communicate with the LLM service',
           };
-
-          const doneListener = (_: any, data: any) => {
-            if (data.requestId !== requestId) return;
-            if (stream._onmessage) {
-              stream._onmessage({
-                data: {
-                  type: 'done',
-                  content: data.content,
-                },
-              });
-            }
-            cleanup();
-          };
-
-          const errorListener = (_: any, data: any) => {
-            if (data.requestId !== requestId) return;
-            if (stream._onmessage) {
-              stream._onmessage({
-                data: {
-                  type: 'error',
-                  error: data.error,
-                },
-              });
-            }
-            cleanup();
-          };
-
-          const cleanup = () => {
-            ipcRenderer.removeListener('llm:stream-chunk', chunkListener);
-            ipcRenderer.removeListener('llm:stream-done', doneListener);
-            ipcRenderer.removeListener('llm:stream-error', errorListener);
-          };
-
-          ipcRenderer.on('llm:stream-chunk', chunkListener);
-          ipcRenderer.on('llm:stream-done', doneListener);
-          ipcRenderer.on('llm:stream-error', errorListener);
-        })
-        .catch(error => {
-          console.error('Stream setup error:', error);
-          if (stream._onmessage) {
-            stream._onmessage({
-              data: {
-                type: 'error',
-                error: '无法与 LLM 服务通信',
-              },
-            });
-          }
+        }
+        return {
+          type: 'content' as const,
+          ...result,
+        };
+      } catch (error) {
+        console.error('Stream setup error:', error);
+        return {
+          type: 'error' as const,
+          error: 'Unable to communicate with the LLM service',
+        };
+      }
+    },
+    streamChunk: (callback: (arg0: any) => void) => {
+      ipcRenderer.on('llm:stream-chunk', (_, data) => {
+        callback({
+          type: 'content',
+          ...data,
         });
-
-      return stream;
+      });
+      return () => {
+        ipcRenderer.removeAllListeners('llm:stream-chunk');
+      };
     },
     abortGeneration: () => ipcRenderer.invoke('llm:abortGeneration'),
   },

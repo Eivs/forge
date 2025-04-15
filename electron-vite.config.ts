@@ -1,6 +1,6 @@
 import { defineConfig } from 'electron-vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import * as path from 'path';
 
 const resolve = (p: string) => path.resolve(__dirname, p);
 

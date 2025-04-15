@@ -2,14 +2,12 @@ import { ipcMain } from 'electron';
 import { getDatabase } from '../database';
 import { setupLLMHandlers } from './llm';
 import { setupMCPHandlers } from './mcp';
-// 使用 getDatabase 函数获取 PrismaClient 实例
 
 export function setupAPIHandlers() {
-  // 设置专门处理程序
   setupLLMHandlers();
   setupMCPHandlers();
 
-  // 聊天 API 处理程序
+  // 获取所有对话
   ipcMain.handle('chats:getAll', async () => {
     const prisma = getDatabase();
     return prisma.chat.findMany({
@@ -27,6 +25,7 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 获取单个对话
   ipcMain.handle('chats:getById', async (_, id: number) => {
     const prisma = getDatabase();
     return prisma.chat.findUnique({
@@ -42,6 +41,7 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 创建对话
   ipcMain.handle('chats:create', async (_, data: any) => {
     const prisma = getDatabase();
 
@@ -69,7 +69,7 @@ export function setupAPIHandlers() {
       }
     }
 
-    // 创建聊天
+    // 创建对话记录
     const chat = await prisma.chat.create({
       data: {
         title: data.title,
@@ -106,6 +106,7 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 更新对话
   ipcMain.handle('chats:update', async (_, id: number, data: any) => {
     const prisma = getDatabase();
 
@@ -141,6 +142,7 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 删除对话
   ipcMain.handle('chats:delete', async (_, id: number) => {
     const prisma = getDatabase();
 
@@ -158,6 +160,7 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 重命名对话
   ipcMain.handle('chats:rename', async (_, id: number, title: string) => {
     const prisma = getDatabase();
 
@@ -182,7 +185,7 @@ export function setupAPIHandlers() {
     });
   });
 
-  // 消息 API 处理程序
+  // 获取对话消息
   ipcMain.handle('messages:getByChatId', async (_, chatId: number) => {
     const prisma = getDatabase();
     return prisma.message.findMany({
@@ -191,6 +194,7 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 创建对话消息
   ipcMain.handle('messages:create', async (_, data: any) => {
     const prisma = getDatabase();
 
@@ -218,6 +222,7 @@ export function setupAPIHandlers() {
     return message;
   });
 
+  // 更新对话消息
   ipcMain.handle('messages:update', async (_, id: number, data: any) => {
     const prisma = getDatabase();
 
@@ -232,6 +237,7 @@ export function setupAPIHandlers() {
     return prisma.message.findUnique({ where: { id } });
   });
 
+  // 删除对话消息
   ipcMain.handle('messages:delete', async (_, id: number) => {
     const prisma = getDatabase();
     await prisma.message.delete({ where: { id } });
@@ -246,6 +252,7 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 获取所有激活的模型
   ipcMain.handle('models:getActive', async () => {
     const prisma = getDatabase();
     return prisma.model.findMany({
@@ -255,6 +262,7 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 创建模型
   ipcMain.handle('models:create', async (_, data: any) => {
     const prisma = getDatabase();
 
@@ -280,6 +288,7 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 更新模型
   ipcMain.handle('models:update', async (_, id: number, data: any) => {
     const prisma = getDatabase();
 
@@ -297,11 +306,13 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 删除模型
   ipcMain.handle('models:delete', async (_, id: number) => {
     const prisma = getDatabase();
     await prisma.model.delete({ where: { id } });
   });
 
+  // 激活模型
   ipcMain.handle('models:setActive', async (_, id: number, isActive: boolean) => {
     const prisma = getDatabase();
 
@@ -325,7 +336,7 @@ export function setupAPIHandlers() {
     });
   });
 
-  // 提供商 API 处理程序
+  // 获取所有提供商
   ipcMain.handle('providers:getAll', async () => {
     const prisma = getDatabase();
     return prisma.provider.findMany({
@@ -333,6 +344,7 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 获取所有激活的提供商
   ipcMain.handle('providers:getActive', async () => {
     const prisma = getDatabase();
     return prisma.provider.findMany({
@@ -341,6 +353,7 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 创建提供商
   ipcMain.handle('providers:create', async (_, data: any) => {
     const prisma = getDatabase();
 
@@ -351,6 +364,7 @@ export function setupAPIHandlers() {
     return provider;
   });
 
+  // 更新提供商
   ipcMain.handle('providers:update', async (_, id: number, data: any) => {
     const prisma = getDatabase();
 
@@ -365,12 +379,14 @@ export function setupAPIHandlers() {
     return prisma.provider.findUnique({ where: { id } });
   });
 
+  // 删除提供商
   ipcMain.handle('providers:delete', async (_, id: number) => {
     const prisma = getDatabase();
     await prisma.provider.delete({ where: { id } });
     await prisma.model.deleteMany({ where: { providerId: id } });
   });
 
+  // 设置提供商的激活状态
   ipcMain.handle('providers:setActive', async (_, id: number, isActive: boolean) => {
     const prisma = getDatabase();
 
@@ -398,12 +414,14 @@ export function setupAPIHandlers() {
     return prisma.setting.findMany();
   });
 
+  // 根据键获取设置项
   ipcMain.handle('settings:getByKey', async (_, key: string) => {
     const prisma = getDatabase();
     const setting = await prisma.setting.findUnique({ where: { key } });
     return setting ? setting.value : null;
   });
 
+  // 设置设置项
   ipcMain.handle('settings:set', async (_, key: string, value: string) => {
     const prisma = getDatabase();
 

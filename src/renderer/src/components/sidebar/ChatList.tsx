@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
-import { MoreHorizontal, Trash } from 'lucide-react';
+import { Trash } from 'lucide-react';
 import { Button } from '../ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import { useLanguage } from '../../locales';
 
@@ -53,7 +47,7 @@ const ChatList = () => {
           chats.map(chat => (
             <div
               key={chat.id}
-              className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all ${
+              className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all group ${
                 activeChat?.id === chat.id
                   ? 'bg-primary/10 border-l-4 border-primary shadow-sm'
                   : 'hover:bg-accent hover:shadow-sm border-l-4 border-transparent'
@@ -62,26 +56,15 @@ const ChatList = () => {
             >
               <div className="truncate flex-1 font-medium">{chat.title}</div>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <MoreHorizontal size={16} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="shadow-md">
-                  <DropdownMenuItem
-                    onClick={e => openDeleteDialog({ id: chat.id, title: chat.title }, e)}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash className="mr-2 h-4 w-4" />
-                    {t.common.delete}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={e => openDeleteDialog({ id: chat.id, title: chat.title }, e)}
+                className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 hover:opacity-100 hover:bg-destructive/10 transition-opacity"
+                title={t.common.delete}
+              >
+                <Trash size={16} />
+              </Button>
             </div>
           ))
         )}
