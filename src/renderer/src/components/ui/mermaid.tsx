@@ -1,29 +1,42 @@
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import mermaid from 'mermaid';
-import { cn } from '../../lib/utils';
+import { useTheme } from '../theme-provider';
 
 export interface MermaidProps {
   theme?: 'default' | 'base' | 'dark' | 'forest' | 'neutral' | 'null';
   children?: any;
+  className?: string;
+}
+declare global {
+  interface Window {
+    mermaid?: typeof mermaid;
+  }
 }
 
-export const Mermaid: FC<MermaidProps> = ({ children, theme = 'default', ...props }) => {
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: theme,
-    logLevel: 'fatal',
-    securityLevel: 'strict',
-    arrowMarkerAbsolute: false,
-    ...props,
-  });
+export const Mermaid: FC<MermaidProps> = () => {
+  const { theme: currentTheme } = useTheme();
 
   useEffect(() => {
-    requestIdleCallback(() => {
-      mermaid.contentLoaded();
-    });
-  }, [children]);
+    const renderCode = () => {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: currentTheme === 'dark' ? 'dark' : 'default',
+        logLevel: 'error',
+        securityLevel: 'strict',
+        arrowMarkerAbsolute: false,
+        suppressErrorRendering: false,
+      });
 
-  return <div className={cn('mermaid flex w-full items-center justify-center')}>{children}</div>;
+      mermaid.run();
+    };
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(renderCode);
+    } else {
+      setTimeout(renderCode, 100);
+    }
+  }, [currentTheme]);
+
+  return <></>;
 };
 
 export default Mermaid;

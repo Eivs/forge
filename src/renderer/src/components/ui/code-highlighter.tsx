@@ -106,7 +106,7 @@ const CodeHighlighterBase: FC<CodeHighlighterProps> = ({
   const codeRef = useRef<HTMLDivElement>(null);
   const codeContent = typeof children === 'string' ? String(children).replace(/\n$/, '') : '';
   const codeLength = codeContent.length;
-  console.log(codeContent);
+
   // 使用 useMemo 缓存语言解析结果
   const lang = useMemo(() => {
     const match = language?.match(/language-(\w+)/);
@@ -195,7 +195,7 @@ const CodeHighlighterBase: FC<CodeHighlighterProps> = ({
   return (
     <div ref={codeRef} className={cn('relative', className)}>
       <div className={cn(toolbarClassName)}>
-        <div>{lang ? lang.toUpperCase() : 'TEXT'}</div>
+        <div>{`<${lang ? lang.toUpperCase() : 'TEXT'}>`}</div>
         <Button
           className={cn('text-muted-foreground hover:text-foreground transition-colors')}
           size="icon"

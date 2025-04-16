@@ -5,6 +5,7 @@ import { CodeHighlighter } from './code-highlighter';
 import { cn } from '../../lib/utils';
 import { TableComponent, TableHeaderCell, TableDataCell } from './table';
 import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import Mermaid from './mermaid';
@@ -35,7 +36,12 @@ const Code = memo(({ className, inline, children, ...props }: any) => {
 
     const match = className?.match(/language-(\w+)/);
     if (match && match[1] === 'mermaid') {
-      return <Mermaid>{children}</Mermaid>;
+      return (
+        <div className="relative mermaid flex w-full items-center justify-center">
+          {children}
+          <Mermaid />
+        </div>
+      );
     }
 
     if (match) {
@@ -66,49 +72,96 @@ const Code = memo(({ className, inline, children, ...props }: any) => {
 const MarkdownBase: FC<MarkdownWrapperProps> = ({
   children,
   remarkPlugins = [remarkGfm, remarkMath],
-  rehypePlugins = [rehypeKatex],
+  rehypePlugins = [rehypeKatex, rehypeRaw],
 }) => {
   // 使用 useMemo 缓存组件定义，避免不必要的重新创建
   const components = useMemo(
     () => ({
       // 代码块
-      code: (props: any) => {
-        return <Code {...props} />;
-      },
+      code: ({ node, ...restProps }: any) => <Code node-type={node.type} {...restProps} />,
       // 表格相关
-      table: (props: any) => <TableComponent {...props} className={cn(markdownTheme.table)} />,
-      th: (props: any) => <TableHeaderCell {...props} className={cn(markdownTheme.th)} />,
-      td: (props: any) => <TableDataCell {...props} className={cn(markdownTheme.td)} />,
-      tr: (props: any) => <tr {...props} className={cn(markdownTheme.tr)} />,
+      table: ({ node, ...restProps }: any) => (
+        <TableComponent node-type={node.type} {...restProps} className={cn(markdownTheme.table)} />
+      ),
+      th: ({ node, ...restProps }: any) => (
+        <TableHeaderCell node-type={node.type} {...restProps} className={cn(markdownTheme.th)} />
+      ),
+      td: ({ node, ...restProps }: any) => (
+        <TableDataCell node-type={node.type} {...restProps} className={cn(markdownTheme.td)} />
+      ),
+      tr: ({ node, ...restProps }: any) => (
+        <tr node-type={node.type} {...restProps} className={cn(markdownTheme.tr)} />
+      ),
       // 文本和链接
-      a: (props: any) => (
-        <a {...props} className={cn(markdownTheme.a)} target="_blank" rel="noopener noreferrer" />
+      a: ({ node, ...restProps }: any) => (
+        <a
+          node-type={node.type}
+          {...restProps}
+          className={cn(markdownTheme.a)}
+          target="_blank"
+          rel="noopener noreferrer"
+        />
       ),
-      p: (props: any) => <p {...props} className={cn(markdownTheme.p)} />,
-      strong: (props: any) => <strong {...props} className={cn(markdownTheme.strong)} />,
-      em: (props: any) => <em {...props} className={cn(markdownTheme.em)} />,
-      del: (props: any) => <del {...props} className={cn(markdownTheme.del)} />,
-      hr: (props: any) => <hr {...props} className={cn(markdownTheme.hr)} />,
+      p: ({ node, ...restProps }: any) => (
+        <p node-type={node.type} {...restProps} className={cn(markdownTheme.p)} />
+      ),
+      strong: ({ node, ...restProps }: any) => (
+        <strong node-type={node.type} {...restProps} className={cn(markdownTheme.strong)} />
+      ),
+      em: ({ node, ...restProps }: any) => (
+        <em node-type={node.type} {...restProps} className={cn(markdownTheme.em)} />
+      ),
+      del: ({ node, ...restProps }: any) => (
+        <del node-type={node.type} {...restProps} className={cn(markdownTheme.del)} />
+      ),
+      hr: ({ node, ...restProps }: any) => (
+        <hr node-type={node.type} {...restProps} className={cn(markdownTheme.hr)} />
+      ),
       // 标题
-      h1: (props: any) => <h1 {...props} className={cn(markdownTheme.h1)} />,
-      h2: (props: any) => <h2 {...props} className={cn(markdownTheme.h2)} />,
-      h3: (props: any) => <h3 {...props} className={cn(markdownTheme.h3)} />,
-      h4: (props: any) => <h4 {...props} className={cn(markdownTheme.h4)} />,
-      h5: (props: any) => <h5 {...props} className={cn(markdownTheme.h5)} />,
-      h6: (props: any) => <h6 {...props} className={cn(markdownTheme.h6)} />,
-      // 列表
-      li: (props: any) => <li {...props} className={cn(markdownTheme.li)} />,
-      ul: (props: any) => <ul {...props} className={cn(markdownTheme.ul)} />,
-      ol: (props: any) => <ol {...props} className={cn(markdownTheme.ol)} />,
-      // 引用和图片
-      blockquote: (props: any) => (
-        <blockquote {...props} className={cn(markdownTheme.blockquote)} />
+      h1: ({ node, ...restProps }: any) => (
+        <h1 node-type={node.type} {...restProps} className={cn(markdownTheme.h1)} />
       ),
-      img: (props: any) => (
-        <img {...props} className={cn(markdownTheme.img)} alt={props.alt || '图片'} />
+      h2: ({ node, ...restProps }: any) => (
+        <h2 node-type={node.type} {...restProps} className={cn(markdownTheme.h2)} />
+      ),
+      h3: ({ node, ...restProps }: any) => (
+        <h3 node-type={node.type} {...restProps} className={cn(markdownTheme.h3)} />
+      ),
+      h4: ({ node, ...restProps }: any) => (
+        <h4 node-type={node.type} {...restProps} className={cn(markdownTheme.h4)} />
+      ),
+      h5: ({ node, ...restProps }: any) => (
+        <h5 node-type={node.type} {...restProps} className={cn(markdownTheme.h5)} />
+      ),
+      h6: ({ node, ...restProps }: any) => (
+        <h6 node-type={node.type} {...restProps} className={cn(markdownTheme.h6)} />
+      ),
+      // 列表
+      li: ({ node, ...restProps }: any) => (
+        <li node-type={node.type} {...restProps} className={cn(markdownTheme.li)} />
+      ),
+      ul: ({ node, ...restProps }: any) => (
+        <ul node-type={node.type} {...restProps} className={cn(markdownTheme.ul)} />
+      ),
+      ol: ({ node, ...restProps }: any) => (
+        <ol node-type={node.type} {...restProps} className={cn(markdownTheme.ol)} />
+      ),
+      // 引用和图片
+      blockquote: ({ node, ...restProps }: any) => (
+        <blockquote node-type={node.type} {...restProps} className={cn(markdownTheme.blockquote)} />
+      ),
+      img: ({ node, ...restProps }: any) => (
+        <img
+          node-type={node.type}
+          {...restProps}
+          className={cn(markdownTheme.img)}
+          alt={restProps.alt || 'Image'}
+        />
       ),
       // 预格式化文本
-      pre: (props: any) => <pre {...props} className={cn(markdownTheme.pre)} />,
+      pre: ({ node, ...restProps }: any) => (
+        <pre node-type={node.type} {...restProps} className={cn(markdownTheme.pre)} />
+      ),
     }),
     []
   ); // 空依赖数组意味着组件定义只创建一次

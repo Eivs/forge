@@ -44,7 +44,6 @@ const MessageList = ({ messages, isGenerating }: MessageListProps) => {
       {messages.map((message, index) => {
         const isLastAssistantMessage =
           message.role === 'assistant' && index === messages.length - 1 && isGenerating;
-
         return (
           <div
             key={message.id}
