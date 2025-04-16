@@ -62,14 +62,14 @@ export const useModelStore = create<ModelState>(set => ({
       // 如果没有设置默认模型或默认模型不活跃，使用第一个活跃模型
       set({
         defaultModel: activeModels[0],
-        defaultModelId: activeModels[0].id.toString()
+        defaultModelId: activeModels[0].id.toString(),
       });
     } catch (error) {
       console.error('Error loading default model:', error);
     }
   },
 
-  setDefaultModel: async (modelId) => {
+  setDefaultModel: async modelId => {
     try {
       await window.electron.settings.set('defaultModelId', modelId);
       const { activeModels } = useModelStore.getState();

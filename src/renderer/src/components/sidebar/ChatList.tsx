@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
-import { Trash } from 'lucide-react';
+import { TrashIcon } from '@radix-ui/react-icons';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import { useLanguage } from '../../locales';
@@ -63,7 +63,7 @@ const ChatList = () => {
                 className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 hover:opacity-100 hover:bg-destructive/10 transition-opacity"
                 title={t.common.delete}
               >
-                <Trash size={16} />
+                <TrashIcon className="h-[16px] w-[16px]" />
               </Button>
             </div>
           ))

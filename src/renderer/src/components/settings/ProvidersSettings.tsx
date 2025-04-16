@@ -6,7 +6,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
-import { Plus, Trash, Edit, Check, X } from 'lucide-react';
+import { PlusIcon, TrashIcon, Pencil1Icon, CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { useLanguage } from '../../locales';
 
@@ -84,7 +84,7 @@ const ProvidersSettings = () => {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">{t.provider.providers}</h3>
         <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+          <PlusIcon className="mr-2 h-4 w-4" />
           {t.provider.addProvider}
         </Button>
       </div>
@@ -113,14 +113,14 @@ const ProvidersSettings = () => {
                         setIsEditDialogOpen(true);
                       }}
                     >
-                      <Edit className="h-4 w-4" />
+                      <Pencil1Icon className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteProvider(provider.id)}
                     >
-                      <Trash className="h-4 w-4" />
+                      <TrashIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>

@@ -20,9 +20,9 @@
 - 支持多种格式：
   - **文本** 和 **Markdown**。
 - 内置功能：
-  - **代码语法高亮**，支持开发者使用 （Reachat 支持）。
-  - **流程图可视化**，支持 Mermaid 图表 （Reachat 支持）。
-  - **数学公式**渲染 （Reachat 支持）。
+  - **代码语法高亮**，支持开发者使用。
+  - **流程图可视化**，支持 Mermaid 图表。
+  - **数学公式**渲染 。
 
 #### 4. 用户体验与界面设计
 
@@ -73,11 +73,6 @@
 
   - Radix UI 用于构建本项目无样式 React 组件库，与 Tailwind CSS 兼容。
   - 参考：https://www.radix-ui.com/themes/docs/overview/getting-started
-
-- Reachat
-
-  - Reachat 用于构建本项目 的 React LLM 聊天组件，支持 Markdown、代码高亮、数学公式和 Mermaid 图表。
-  - 参考：https://reachat.dev/docs
 
 - electron-vite
 

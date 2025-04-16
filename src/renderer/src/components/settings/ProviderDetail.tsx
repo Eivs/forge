@@ -12,7 +12,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { CompactSwitch } from './CompactSwitch';
-import { Plus, Trash, Edit, ArrowLeft } from 'lucide-react';
+import { PlusIcon, TrashIcon, Pencil1Icon, ArrowLeftIcon } from '@radix-ui/react-icons';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { useLanguage } from '../../locales';
 
@@ -163,7 +163,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
       {/* Provider Header */}
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={onBack} className="md:hidden">
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeftIcon className="h-3 w-3" />
         </Button>
         <h2 className="text-base font-medium">{provider.name}</h2>
       </div>
@@ -184,7 +184,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                 className="h-6 w-6 p-0"
                 onClick={() => setIsEditProviderOpen(true)}
               >
-                <Edit className="h-3 w-3" />
+                <Pencil1Icon className="h-3 w-3" />
               </Button>
               <Button
                 variant="ghost"
@@ -192,7 +192,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                 className="h-6 w-6 p-0"
                 onClick={handleDeleteProvider}
               >
-                <Trash className="h-3 w-3" />
+                <TrashIcon className="h-3 w-3" />
               </Button>
             </div>
           </div>
@@ -221,7 +221,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
             onClick={() => setIsAddModelOpen(true)}
             className="h-7 text-xs px-2"
           >
-            <Plus className="mr-1 h-3 w-3" />
+            <PlusIcon className="mr-1 h-3 w-3" />
             {t.model.addModel}
           </Button>
         </div>
@@ -251,7 +251,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                           setIsEditModelOpen(true);
                         }}
                       >
-                        <Edit className="h-3 w-3" />
+                        <Pencil1Icon className="h-3 w-3" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -259,7 +259,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                         className="h-6 w-6 p-0"
                         onClick={() => handleDeleteModel(model.id)}
                       >
-                        <Trash className="h-3 w-3" />
+                        <TrashIcon className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>

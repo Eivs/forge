@@ -78,6 +78,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       const chats = await window.electron.chats.getAll();
       set({ chats });
+      if (!get().activeChat) {
+        set({ activeChat: chats[0] || null });
+      }
     } catch (error) {
       handleError(error, 'Error fetching chats:');
     }

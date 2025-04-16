@@ -41,8 +41,7 @@ Forge 是一个跨平台的桌面 AI 助手应用，支持多种 AI 模型、对
 - **React**: 前端框架
 - **Zustand**: 状态管理
 - **Tailwind CSS**: 实用优先的 CSS 框架
-- **Radix UI**: 无样式组件库
-- **Reachat**: 支持 Markdown 的聊天 UI 组件库
+- **Radix-UI**: UI 组件库
 - **LangChain**: 带流式传输支持的 LLM API 请求库
 - **Prisma**: 现代化 ORM 数据库交互工具
 
@@ -55,8 +54,7 @@ Forge 采用 Electron 构建，使用主进程/渲染进程架构，结合 React
 - Electron 渲染器进程处理前端逻辑
 - React 组件结构管理用户界面
 - Zustand 管理应用状态
-- Radix UI + Tailwind CSS 构建界面
-- Reachat 处理聊天界面和格式化
+- Radix-UI + Tailwind CSS 构建 UI 界面
 
 ### 后端
 
@@ -143,7 +141,7 @@ graph TB
     subgraph Frontend["Frontend Layer"]
         UI[React UI Components]
         State[Zustand State Management]
-        Chat[Reachat Chat Component]
+        Chat[Chat Component]
         UI <--> State
         State <--> Chat
     end

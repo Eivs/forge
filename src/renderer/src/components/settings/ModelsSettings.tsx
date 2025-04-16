@@ -6,7 +6,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
-import { Plus, Trash, Edit } from 'lucide-react';
+import { PlusIcon, TrashIcon, Pencil1Icon } from '@radix-ui/react-icons';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useLanguage } from '../../locales';
@@ -104,7 +104,7 @@ const ModelsSettings = () => {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">{t.model.model}</h3>
         <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+          <PlusIcon className="mr-2 h-4 w-4" />
           {t.model.addModel}
         </Button>
       </div>
@@ -134,10 +134,10 @@ const ModelsSettings = () => {
                         setIsEditDialogOpen(true);
                       }}
                     >
-                      <Edit className="h-4 w-4" />
+                      <Pencil1Icon className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDeleteModel(model.id)}>
-                      <Trash className="h-4 w-4" />
+                      <TrashIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>

@@ -10,7 +10,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ExclamationTriangleIcon, CheckCircledIcon } from '@radix-ui/react-icons';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useLanguage } from '../../locales';
 
@@ -131,7 +131,7 @@ const MCPSettings = () => {
 
           {error && (
             <Alert variant="destructive" className="py-2 text-xs">
-              <AlertCircle className="h-3 w-3" />
+              <ExclamationTriangleIcon className="h-3 w-3" />
               <AlertTitle className="text-xs font-medium">{t.mcp.error}</AlertTitle>
               <AlertDescription className="text-xs">{error}</AlertDescription>
             </Alert>
@@ -139,7 +139,7 @@ const MCPSettings = () => {
 
           {isConnected && (
             <Alert className="py-2 text-xs">
-              <CheckCircle2 className="h-3 w-3" />
+              <CheckCircledIcon className="h-3 w-3" />
               <AlertTitle className="text-xs font-medium">{t.mcp.connected}</AlertTitle>
               <AlertDescription className="text-xs">
                 {t.mcp.connectedDescription}

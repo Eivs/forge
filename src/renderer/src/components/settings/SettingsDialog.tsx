@@ -68,7 +68,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="flex flex-col h-[calc(75vh-60px)]"
+          className="flex flex-col h-[calc(75vh-160px)]"
         >
           <TabsList className="px-4 mb-1">
             <TabsTrigger value="general" className="text-xs py-1">
@@ -98,7 +98,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
               </div>
               <div className="w-3/4 p-3 h-full">
                 <ProviderDetail
-                  provider={currentProvider}
+                  provider={currentProvider || null}
                   onBack={() => setSelectedProvider(null)}
                 />
               </div>

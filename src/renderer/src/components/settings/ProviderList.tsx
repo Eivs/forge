@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useModelStore } from '../../store/modelStore';
 import { Provider } from '../../store/chatStore';
 import { Button } from '../ui/button';
-import { Plus, Settings } from 'lucide-react';
+import { PlusIcon, GearIcon } from '@radix-ui/react-icons';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -54,7 +54,7 @@ const ProviderList = ({ providers, selectedProviderId, onSelectProvider }: Provi
             onClick={() => setIsAddDialogOpen(true)}
             className="h-7 text-xs px-2"
           >
-            <Plus className="h-3 w-3 mr-1" />
+            <PlusIcon className="h-3 w-3 mr-1" />
             {t.provider.addProvider}
           </Button>
         </div>
@@ -71,14 +71,14 @@ const ProviderList = ({ providers, selectedProviderId, onSelectProvider }: Provi
               <div
                 key={provider.id}
                 className={cn(
-                  'flex items-center justify-between py-1 px-2 rounded-md cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors text-sm',
+                  'flex items-center justify-between py-2 px-4 rounded-md cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors text-base',
                   selectedProviderId === provider.id && 'bg-accent text-accent-foreground'
                 )}
                 onClick={() => onSelectProvider(provider)}
               >
                 <div className="flex items-center">
-                  <Settings className="h-3 w-3 mr-1 opacity-70" />
-                  <span className="text-xs">{provider.name}</span>
+                  <GearIcon className="h-3 w-3 mr-1 opacity-70" />
+                  <span className="text-base">{provider.name}</span>
                 </div>
                 {provider.isActive && <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>}
               </div>
