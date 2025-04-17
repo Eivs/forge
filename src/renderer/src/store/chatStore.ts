@@ -191,11 +191,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     try {
       const messages = activeChat.messages.map(({ role, content }) => ({ role, content }));
+      // 检查是否有 MCP 工具可用
+      const mcpStatus = await window.electron.mcp.isConnected();
+
       const modelParams = {
         modelId: activeChat.model.id,
         temperature: activeChat.temperature,
         topP: activeChat.topP,
         maxTokens: activeChat.maxTokens,
+        useMCP: mcpStatus, // 如果 MCP 已连接，则使用 MCP 工具
       };
 
       tempMessage = await get().addMessage(chatId, {

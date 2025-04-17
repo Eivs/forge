@@ -4,6 +4,7 @@ import { ChatDeepSeek } from '@langchain/deepseek';
 import { randomUUID } from 'crypto';
 import { getDatabase } from '../database';
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
+import { getMCPTools } from './mcp';
 
 // 存储正在进行的 LLM 生成任务的中止控制器映射
 const abortControllers = new Map<string, AbortController>();
@@ -15,16 +16,18 @@ const defaultSystemPrompt = `You are a helpful assistant. today is ${new Date().
  * @param temperature 模型温度
  * @param topP 模型 top-p
  * @param streaming 是否流式传输
+ * @param useMCP 是否使用 MCP 工具
  */
 async function getLLMModel(
   modelId: number,
   temperature: number,
   topP: number,
   maxTokens?: number | null,
-  streaming: boolean = false
+  streaming: boolean = false,
+  useMCP: boolean = false
 ) {
   console.log(
-    `Getting LLM model with ID ${modelId}, temperature ${temperature}, topP ${topP}, maxTokens ${maxTokens}, streaming ${streaming}`
+    `Getting LLM model with ID ${modelId}, temperature ${temperature}, topP ${topP}, maxTokens ${maxTokens}, streaming ${streaming}, useMCP ${useMCP}`
   );
   const prisma = getDatabase();
 
@@ -65,20 +68,42 @@ async function getLLMModel(
     config.maxTokens = maxTokens;
   }
 
+  // 创建 LLM 模型实例
+  let llmModel;
   switch (model.provider.name.toLowerCase()) {
     case 'openai':
-      return new ChatOpenAI(config);
+      llmModel = new ChatOpenAI(config);
+      break;
     // TODO: 根据需要添加其他提供商的处理
 
     case 'deepseek':
-      return new ChatDeepSeek(config);
+      llmModel = new ChatDeepSeek(config);
+      break;
 
     default:
       console.log(
         `Using ${model.provider.name} API with baseURL: ${model.provider.baseUrl}, apiKey: ${apiKey ? 'set' : 'not set'}`
       );
-      return new ChatOpenAI(config);
+      llmModel = new ChatOpenAI(config);
+      break;
   }
+
+  // 如果需要使用 MCP 工具，则绑定工具
+  if (useMCP) {
+    if (!llmModel.bindTools) {
+      console.log('LLM model does not support binding tools');
+      return llmModel;
+    }
+    const mcpTools = getMCPTools();
+    if (mcpTools && mcpTools.length > 0) {
+      console.log(`Binding ${mcpTools.length} MCP tools to LLM model`);
+
+      return llmModel.bindTools(mcpTools);
+    } else {
+      console.warn('No MCP tools available to bind');
+    }
+  }
+  return llmModel;
 }
 
 /**
@@ -133,10 +158,10 @@ function formatMessagesForLLM(messages: any[]) {
 export function setupLLMHandlers() {
   // 处理非流式聊天完成
   ipcMain.handle('llm:chat', async (_, messages: any[], modelParams: any) => {
-    const { modelId, temperature, topP, maxTokens } = modelParams;
+    const { modelId, temperature, topP, maxTokens, useMCP = false } = modelParams;
 
     try {
-      const model = await getLLMModel(modelId, temperature, topP, maxTokens);
+      const model = await getLLMModel(modelId, temperature, topP, maxTokens, false, useMCP);
 
       // 将消息格式化为 LangChain 格式
       const formattedMessages = formatMessagesForLLM(messages);
@@ -156,8 +181,8 @@ export function setupLLMHandlers() {
 
   // 处理流式聊天请求
   ipcMain.handle('llm:streamChat', async (event, { messages, modelParams }) => {
-    const { modelId, temperature, topP, maxTokens } = modelParams;
-    console.log(`Received stream chat request with modelId: ${modelId}`);
+    const { modelId, temperature, topP, maxTokens, useMCP = false } = modelParams;
+    console.log(`Received stream chat request with modelId: ${modelId}, useMCP: ${useMCP}`);
 
     // 创建一个中止控制器
     const abortController = new AbortController();
@@ -165,7 +190,7 @@ export function setupLLMHandlers() {
     abortControllers.set(requestId, abortController);
 
     try {
-      const model = await getLLMModel(modelId, temperature, topP, maxTokens, true);
+      const model = await getLLMModel(modelId, temperature, topP, maxTokens, true, useMCP);
       console.log(`Got model for streaming:`, model);
       const formattedMessages = formatMessagesForLLM(messages);
 

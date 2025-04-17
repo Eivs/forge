@@ -64,6 +64,7 @@ declare global {
         isConnected: () => Promise<boolean>;
         getConnectionStatus: () => Promise<string>;
         createMCPModel: (modelParams: any) => Promise<{ success: boolean }>;
+        initialize: () => Promise<{ success: boolean; message?: string }>;
       };
 
       // MCP 服务器相关 API

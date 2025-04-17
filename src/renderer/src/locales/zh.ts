@@ -112,6 +112,9 @@ export default {
     testFailed: '连接测试失败',
     back: '返回',
     saveSuccess: '保存成功',
+    initSuccess: 'MCP 初始化成功',
+    initSuccessDesc: 'MCP 客户端初始化成功',
+    initFailed: 'MCP 初始化失败',
   },
   errors: {
     title: '错误',

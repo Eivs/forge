@@ -114,6 +114,9 @@ export default {
     testFailed: 'Connection test failed',
     back: 'Back',
     saveSuccess: 'saved successfully',
+    initSuccess: 'MCP Initialized',
+    initSuccessDesc: 'MCP client initialized successfully',
+    initFailed: 'MCP Initialization Failed',
   },
   errors: {
     title: 'Error',

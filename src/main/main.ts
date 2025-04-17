@@ -65,7 +65,7 @@ app.whenReady().then(async () => {
     setupAPIHandlers();
 
     // 处理打开外部链接
-    ipcMain.handle('shell:openExternal', (event, url) => {
+    ipcMain.handle('shell:openExternal', (_, url) => {
       shell.openExternal(url);
     });
 

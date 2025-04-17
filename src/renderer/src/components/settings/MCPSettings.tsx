@@ -43,27 +43,50 @@ const MCPSettings = () => {
           // 选择第一个服务器
           setSelectedServerId(String(processedServers[0].id));
 
-          // 检查连接状态
-          const connected = await window.electron.mcp.isConnected();
-          if (connected) {
-            const status = await window.electron.mcp.getConnectionStatus();
-            // 更新所有已启用的服务器的连接状态
-            setServers(prev =>
-              prev.map(server =>
-                server.isEnabled
-                  ? { ...server, isConnected: connected, connectionStatus: status }
-                  : server
-              )
-            );
+          // 初始化 MCP 客户端
+          const initResult = await window.electron.mcp.initialize();
+          if (initResult.success) {
+            // 检查连接状态
+            const connected = await window.electron.mcp.isConnected();
+            if (connected) {
+              const status = await window.electron.mcp.getConnectionStatus();
+              // 更新所有已启用的服务器的连接状态
+              setServers(prev =>
+                prev.map(server =>
+                  server.isEnabled
+                    ? { ...server, isConnected: connected, connectionStatus: status }
+                    : server
+                )
+              );
+
+              // 显示成功提示
+              toast({
+                title: t.mcp.initSuccess,
+                description: t.mcp.initSuccessDesc,
+                variant: 'default',
+              });
+            }
+          } else if (initResult.message) {
+            // 显示错误提示
+            toast({
+              title: t.mcp.initFailed,
+              description: initResult.message,
+              variant: 'destructive',
+            });
           }
         }
       } catch (error) {
         console.error('Error loading MCP servers:', error);
+        toast({
+          title: t.mcp.error,
+          description: String(error),
+          variant: 'destructive',
+        });
       }
     };
 
     loadMCPServers();
-  }, []);
+  }, [t, toast]);
 
   const handleSaveServer = async (server: MCPServer) => {
     try {

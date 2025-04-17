@@ -106,6 +106,7 @@ contextBridge.exposeInMainWorld('electron', {
     isConnected: () => ipcRenderer.invoke('mcp:isConnected'),
     getConnectionStatus: () => ipcRenderer.invoke('mcp:getConnectionStatus'),
     createMCPModel: (modelParams: any) => ipcRenderer.invoke('mcp:createMCPModel', modelParams),
+    initialize: () => ipcRenderer.invoke('mcp:initialize'),
   },
 
   // MCP 服务器相关 API

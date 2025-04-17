@@ -56,11 +56,11 @@ export function setupMCPServerHandlers() {
 
     // 处理 args 和 env，将它们转换为 JSON 字符串
     const updateData: any = { ...data };
-    
+
     if (data.args !== undefined) {
       updateData.args = data.args ? JSON.stringify(data.args) : null;
     }
-    
+
     if (data.env !== undefined) {
       updateData.env = data.env ? JSON.stringify(data.env) : null;
     }
