@@ -185,6 +185,35 @@ export function setupAPIHandlers() {
     });
   });
 
+  // 清空对话消息，但保留对话本身
+  ipcMain.handle('chats:clearMessages', async (_, id: number) => {
+    const prisma = getDatabase();
+
+    // 删除与该对话相关的所有消息
+    await prisma.message.deleteMany({
+      where: { chatId: id },
+    });
+
+    // 更新对话的更新时间
+    await prisma.chat.update({
+      where: { id },
+      data: { updatedAt: new Date() },
+    });
+
+    // 返回更新后的对话
+    return prisma.chat.findUnique({
+      where: { id },
+      include: {
+        model: {
+          include: {
+            provider: true,
+          },
+        },
+        messages: true,
+      },
+    });
+  });
+
   // 获取对话消息
   ipcMain.handle('messages:getByChatId', async (_, chatId: number) => {
     const prisma = getDatabase();
@@ -272,7 +301,6 @@ export function setupAPIHandlers() {
       throw new Error('Provider not found');
     }
 
-    // 创建模型
     const model = await prisma.model.create({
       data: {
         name: data.name,
@@ -344,7 +372,7 @@ export function setupAPIHandlers() {
     });
   });
 
-  // 获取所有激活的提供商
+  // 获取所有以启用的提供商
   ipcMain.handle('providers:getActive', async () => {
     const prisma = getDatabase();
     return prisma.provider.findMany({
@@ -386,7 +414,7 @@ export function setupAPIHandlers() {
     await prisma.model.deleteMany({ where: { providerId: id } });
   });
 
-  // 设置提供商的激活状态
+  // 设置提供商的启用状态
   ipcMain.handle('providers:setActive', async (_, id: number, isActive: boolean) => {
     const prisma = getDatabase();
 

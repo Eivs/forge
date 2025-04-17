@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useModelStore } from '../../store/modelStore';
 import { Provider } from '../../store/chatStore';
 import { Button } from '../ui/button';
-import { PlusIcon, GearIcon } from '@radix-ui/react-icons';
+import { PlusIcon, Link2Icon } from '@radix-ui/react-icons';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -77,7 +77,7 @@ const ProviderList = ({ providers, selectedProviderId, onSelectProvider }: Provi
                 onClick={() => onSelectProvider(provider)}
               >
                 <div className="flex items-center">
-                  <GearIcon className="h-3 w-3 mr-1 opacity-70" />
+                  <Link2Icon className="h-3 w-3 mr-1 opacity-70" />
                   <span className="text-base">{provider.name}</span>
                 </div>
                 {provider.isActive && <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>}

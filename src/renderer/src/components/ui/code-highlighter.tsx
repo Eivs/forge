@@ -10,6 +10,7 @@ import {
   useRef,
 } from 'react';
 import { Button } from './button';
+import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 // 使用轻量级版本的语法高亮器
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { ClipboardCopyIcon, CheckIcon } from '@radix-ui/react-icons';
@@ -101,9 +102,8 @@ const CodeHighlighterBase: FC<CodeHighlighterProps> = ({
 }) => {
   const { theme: currentTheme } = useTheme();
   const [copied, setCopied] = useState(false);
-  const [isVisible, setIsVisible] = useState(!lazyLoad);
   const [isLoaded, setIsLoaded] = useState(false);
-  const codeRef = useRef<HTMLDivElement>(null);
+
   const codeContent = typeof children === 'string' ? String(children).replace(/\n$/, '') : '';
   const codeLength = codeContent.length;
 
@@ -128,41 +128,20 @@ const CodeHighlighterBase: FC<CodeHighlighterProps> = ({
   }, []);
 
   // 使用 Intersection Observer 实现延迟加载
-  useEffect(() => {
-    if (!lazyLoad || isVisible) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (codeRef.current) {
-      observer.observe(codeRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [lazyLoad, isVisible]);
+  const codeRef = useRef<HTMLDivElement>(null);
+  const isVisible = useIntersectionObserver({
+    ref: codeRef,
+    threshold: 0.1,
+    enabled: lazyLoad,
+  });
 
   // 大型代码块延迟渲染
   useEffect(() => {
     if (!isVisible) return;
 
-    // 使用 requestIdleCallback 在浏览器空闲时渲染
-    const renderCode = () => {
+    setTimeout(() => {
       setIsLoaded(true);
-    };
-
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(renderCode);
-    } else {
-      // 兼容不支持 requestIdleCallback 的浏览器
-      setTimeout(renderCode, 100);
-    }
+    });
   }, [isVisible]);
 
   // 渲染占位内容
@@ -229,19 +208,5 @@ const CodeHighlighterBase: FC<CodeHighlighterProps> = ({
   );
 };
 
-// 自定义比较函数，只有当关键属性变化时才重新渲染
-const arePropsEqual = (prevProps: CodeHighlighterProps, nextProps: CodeHighlighterProps) => {
-  // 检查代码内容是否相同
-  const prevContent = typeof prevProps.children === 'string' ? prevProps.children : '';
-  const nextContent = typeof nextProps.children === 'string' ? nextProps.children : '';
-
-  // 只有当这些关键属性变化时才重新渲染
-  return (
-    prevContent === nextContent &&
-    prevProps.language === nextProps.language &&
-    prevProps.className === nextProps.className
-  );
-};
-
 // 使用 memo 包装组件以避免不必要的重新渲染
-export const CodeHighlighter = memo(CodeHighlighterBase, arePropsEqual);
+export const CodeHighlighter = memo(CodeHighlighterBase);

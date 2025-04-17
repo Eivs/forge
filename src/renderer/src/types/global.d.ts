@@ -66,6 +66,11 @@ interface Window {
       getConnectionStatus: () => Promise<'connected' | 'disconnected' | 'error'>;
       createMCPModel: (modelParams: any) => Promise<any>;
     };
+
+    // shell 相关 API
+    shell: {
+      openExternal: (url: string) => Promise<void>;
+    };
   };
 }
 

@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electron', {
     update: (id: number, data: any) => ipcRenderer.invoke('chats:update', id, data),
     delete: (id: number) => ipcRenderer.invoke('chats:delete', id),
     rename: (id: number, title: string) => ipcRenderer.invoke('chats:rename', id, title),
+    clearMessages: (id: number) => ipcRenderer.invoke('chats:clearMessages', id),
   },
 
   // 消息相关 API
@@ -105,5 +106,10 @@ contextBridge.exposeInMainWorld('electron', {
     isConnected: () => ipcRenderer.invoke('mcp:isConnected'),
     getConnectionStatus: () => ipcRenderer.invoke('mcp:getConnectionStatus'),
     createMCPModel: (modelParams: any) => ipcRenderer.invoke('mcp:createMCPModel', modelParams),
+  },
+
+  // shell 相关 API
+  shell: {
+    openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
   },
 });

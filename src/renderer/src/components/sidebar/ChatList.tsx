@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
-import { TrashIcon } from '@radix-ui/react-icons';
+import { TrashIcon, ChatBubbleIcon } from '@radix-ui/react-icons';
+
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import { useLanguage } from '../../locales';
@@ -54,6 +55,7 @@ const ChatList = () => {
               }`}
               onClick={() => handleChatClick(chat.id)}
             >
+              <ChatBubbleIcon className="m-2" />
               <div className="truncate flex-1 font-medium">{chat.title}</div>
 
               <Button

@@ -20,6 +20,7 @@ export interface ChatType {
   systemPrompt?: string;
   temperature: number;
   topP: number;
+  maxTokens?: number;
   model: ModelType;
   messages: MessageType[];
   createdAt: Date;
@@ -63,6 +64,7 @@ export interface CreateChatParams {
   systemPrompt?: string;
   temperature: number;
   topP: number;
+  maxTokens?: number;
   model: ModelType | { id: number };
 }
 
@@ -72,6 +74,7 @@ export interface UpdateChatParams {
   systemPrompt?: string;
   temperature?: number;
   topP?: number;
+  maxTokens?: number;
   modelId?: number;
 }
 
@@ -136,6 +139,7 @@ export interface ElectronAPI {
     update: (id: number, data: UpdateChatParams) => Promise<ChatType>;
     delete: (id: number) => Promise<void>;
     rename: (id: number, title: string) => Promise<ChatType>;
+    clearMessages: (id: number) => Promise<ChatType>;
   };
 
   // 消息相关 API

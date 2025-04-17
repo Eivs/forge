@@ -26,6 +26,9 @@ export default {
     renameChat: 'Rename Chat',
     enterNewTitle: 'Enter new title',
     typeMessage: 'Type a message...',
+    changeModel: 'Change model',
+    clearMessages: 'Clear Messages',
+    clearMessagesConfirm: 'Are you sure you want to clear all messages in this chat?',
   },
   settings: {
     settings: 'Settings',
@@ -57,6 +60,8 @@ export default {
     topP: 'Top P',
     topPDescription:
       'Controls the vocabulary range the model considers, lower values make output more focused',
+    maxTokens: 'Max Tokens',
+    maxTokensDescription: 'Maximum number of tokens to generate. Leave empty for model default',
     noModelsConfigured: 'No models configured',
     addModel: 'Add Model',
     editModel: 'Edit Model',

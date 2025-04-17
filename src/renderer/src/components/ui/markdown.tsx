@@ -36,12 +36,7 @@ const Code = memo(({ className, inline, children, ...props }: any) => {
 
     const match = className?.match(/language-(\w+)/);
     if (match && match[1] === 'mermaid') {
-      return (
-        <div className="relative mermaid flex w-full items-center justify-center">
-          {children}
-          <Mermaid />
-        </div>
-      );
+      return <Mermaid>{children}</Mermaid>;
     }
 
     if (match) {
@@ -67,6 +62,12 @@ const Code = memo(({ className, inline, children, ...props }: any) => {
 
   return renderContent;
 });
+
+// 处理链接点击事件
+const handleLinkClick = (e: any) => {
+  e.preventDefault();
+  window.electron.shell.openExternal(e.target.href);
+};
 
 // 定义组件函数
 const MarkdownBase: FC<MarkdownWrapperProps> = ({
@@ -100,6 +101,7 @@ const MarkdownBase: FC<MarkdownWrapperProps> = ({
           className={cn(markdownTheme.a)}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={handleLinkClick}
         />
       ),
       p: ({ node, ...restProps }: any) => (

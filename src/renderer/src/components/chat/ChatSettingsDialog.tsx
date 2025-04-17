@@ -24,6 +24,7 @@ const ChatSettingsDialog = ({ open, onOpenChange, chatId }: ChatSettingsDialogPr
   const [systemPrompt, setSystemPrompt] = useState('');
   const [temperature, setTemperature] = useState(0.7);
   const [topP, setTopP] = useState(1.0);
+  const [maxTokens, setMaxTokens] = useState<number | null>(null);
   const [modelId, setModelId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,6 +36,7 @@ const ChatSettingsDialog = ({ open, onOpenChange, chatId }: ChatSettingsDialogPr
         setSystemPrompt(chat.systemPrompt || '');
         setTemperature(chat.temperature);
         setTopP(chat.topP);
+        setMaxTokens(chat.maxTokens || null);
         setModelId(chat.model.id);
       }
     }
@@ -58,6 +60,7 @@ const ChatSettingsDialog = ({ open, onOpenChange, chatId }: ChatSettingsDialogPr
         systemPrompt,
         temperature,
         topP,
+        maxTokens: maxTokens,
         modelId: Number(modelId), // 确保 modelId 是数字
       });
       onOpenChange(false);
@@ -149,6 +152,21 @@ const ChatSettingsDialog = ({ open, onOpenChange, chatId }: ChatSettingsDialogPr
               onValueChange={(value: number[]) => setTopP(value[0])}
             />
             <p className="text-xs text-muted-foreground">{t.model.topPDescription}</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="maxTokens">{t.model.maxTokens}</Label>
+            <Input
+              id="maxTokens"
+              type="number"
+              value={maxTokens === null ? '' : maxTokens}
+              onChange={(e) => {
+                const value = e.target.value === '' ? null : parseInt(e.target.value);
+                setMaxTokens(value);
+              }}
+              placeholder="4096"
+            />
+            <p className="text-xs text-muted-foreground">{t.model.maxTokensDescription}</p>
           </div>
         </div>
         <DialogFooter>

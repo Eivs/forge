@@ -14,6 +14,7 @@ export interface Chat {
   systemPrompt?: string;
   temperature: number;
   topP: number;
+  maxTokens?: number;
   model: Model;
   messages: Message[];
   createdAt: Date;
@@ -50,6 +51,7 @@ interface ChatState {
   updateChat: (id: number, data: ChatUpdateData) => Promise<Chat>;
   deleteChat: (id: number) => Promise<void>;
   renameChat: (id: number, title: string) => Promise<Chat>;
+  clearMessages: (id: number) => Promise<Chat>;
   addMessage: (chatId: number, message: Partial<Message>) => Promise<Message>;
   generateResponse: (chatId: number) => Promise<void>;
   abortGeneration: () => Promise<void>;
@@ -139,6 +141,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
+  clearMessages: async (id) => {
+    try {
+      const updatedChat = await window.electron.chats.clearMessages(id);
+      set(state => ({
+        chats: state.chats.map(chat => (chat.id === id ? updatedChat : chat)),
+        activeChat: state.activeChat?.id === id ? updatedChat : state.activeChat,
+      }));
+      return updatedChat;
+    } catch (error) {
+      handleError(error, 'Error clearing chat messages:');
+    }
+  },
+
   addMessage: async (chatId, message) => {
     try {
       const newMessage = await window.electron.messages.create({
@@ -179,6 +194,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         modelId: activeChat.model.id,
         temperature: activeChat.temperature,
         topP: activeChat.topP,
+        maxTokens: activeChat.maxTokens,
       };
 
       tempMessage = await get().addMessage(chatId, {

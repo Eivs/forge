@@ -1,12 +1,13 @@
 import { ipcMain } from 'electron';
 import { ChatOpenAI } from '@langchain/openai';
+import { ChatDeepSeek } from '@langchain/deepseek';
 import { randomUUID } from 'crypto';
 import { getDatabase } from '../database';
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 
 // 存储正在进行的 LLM 生成任务的中止控制器映射
 const abortControllers = new Map<string, AbortController>();
-const defaultSystemPrompt = 'You are a helpful assistant.';
+const defaultSystemPrompt = `You are a helpful assistant. today is ${new Date().toLocaleDateString()}`;
 
 /**
  * 根据模型 ID 获取 LLM 模型
@@ -19,10 +20,11 @@ async function getLLMModel(
   modelId: number,
   temperature: number,
   topP: number,
+  maxTokens?: number | null,
   streaming: boolean = false
 ) {
   console.log(
-    `Getting LLM model with ID ${modelId}, temperature ${temperature}, topP ${topP}, streaming ${streaming}`
+    `Getting LLM model with ID ${modelId}, temperature ${temperature}, topP ${topP}, maxTokens ${maxTokens}, streaming ${streaming}`
   );
   const prisma = getDatabase();
 
@@ -41,48 +43,41 @@ async function getLLMModel(
   const apiKey = model.provider.apiKey;
 
   if (!apiKey) {
-    console.error(`API key for provider ${model.provider.name} not found. `);
-    console.log('Using default API key for development');
-    return new ChatOpenAI({
-      modelName: model.name,
-      temperature,
-      topP,
-      streaming,
-      openAIApiKey: 'sk-dummy-key-for-development',
-      configuration: {
-        baseURL: model.provider.baseUrl,
-      },
-    });
+    throw new Error(`API key for provider ${model.provider.name} not found. `);
   }
 
-  switch (model.provider.name) {
-    case 'OpenAI':
-      return new ChatOpenAI({
-        modelName: model.name,
-        temperature,
-        topP,
-        streaming,
-        openAIApiKey: apiKey,
-        configuration: {
-          baseURL: model.provider.baseUrl,
-        },
-      });
+  // 创建基本配置
+  const config: any = {
+    modelName: model.name,
+    temperature,
+    topP,
+    streaming,
+    openAIApiKey: apiKey,
+    apiKey,
+    timeout: 15000,
+    configuration: {
+      baseURL: model.provider.baseUrl,
+    },
+  };
 
-    // 根据需要添加其他提供商的处理
+  // 如果提供了 maxTokens，则添加到配置中
+  if (maxTokens) {
+    config.maxTokens = maxTokens;
+  }
+
+  switch (model.provider.name.toLowerCase()) {
+    case 'openai':
+      return new ChatOpenAI(config);
+    // TODO: 根据需要添加其他提供商的处理
+
+    case 'deepseek':
+      return new ChatDeepSeek(config);
+
     default:
       console.log(
-        `Using {model.provider.name} API with baseURL: ${model.provider.baseUrl}, apiKey: ${apiKey ? 'set' : 'not set'}`
+        `Using ${model.provider.name} API with baseURL: ${model.provider.baseUrl}, apiKey: ${apiKey ? 'set' : 'not set'}`
       );
-      return new ChatOpenAI({
-        modelName: model.name,
-        temperature,
-        topP,
-        streaming,
-        openAIApiKey: apiKey,
-        configuration: {
-          baseURL: model.provider.baseUrl,
-        },
-      });
+      return new ChatOpenAI(config);
   }
 }
 
@@ -93,13 +88,12 @@ async function getLLMModel(
 function formatMessagesForLLM(messages: any[]) {
   console.log('Formatting messages for LLM:', JSON.stringify(messages, null, 2));
 
-  // 确保至少有一条消息
   if (!messages || messages.length === 0) {
     console.warn('No messages to format, returning default system message');
     return [new SystemMessage(defaultSystemPrompt)];
   }
 
-  // 检查是否有系统消息，如果没有，添加一个
+  // 检查是否有系统消息，如果没有，使用默认系统消息作为系统消息
   const hasSystemMessage = messages.some(msg => msg.role === 'system');
   const formattedMessages = [];
 
@@ -139,17 +133,19 @@ function formatMessagesForLLM(messages: any[]) {
 export function setupLLMHandlers() {
   // 处理非流式聊天完成
   ipcMain.handle('llm:chat', async (_, messages: any[], modelParams: any) => {
-    const { modelId, temperature, topP } = modelParams;
+    const { modelId, temperature, topP, maxTokens } = modelParams;
 
     try {
-      const model = await getLLMModel(modelId, temperature, topP);
+      const model = await getLLMModel(modelId, temperature, topP, maxTokens);
 
       // 将消息格式化为 LangChain 格式
       const formattedMessages = formatMessagesForLLM(messages);
 
       // 生成完成响应
-      // @ts-expect-error Disable type checking for now
-      const response = await model.invoke(formattedMessages);
+      const response = await model.invoke(formattedMessages as any);
+      if (response) {
+        console.log(response);
+      }
 
       return response.content;
     } catch (error) {
@@ -160,7 +156,7 @@ export function setupLLMHandlers() {
 
   // 处理流式聊天请求
   ipcMain.handle('llm:streamChat', async (event, { messages, modelParams }) => {
-    const { modelId, temperature, topP } = modelParams;
+    const { modelId, temperature, topP, maxTokens } = modelParams;
     console.log(`Received stream chat request with modelId: ${modelId}`);
 
     // 创建一个中止控制器
@@ -169,13 +165,12 @@ export function setupLLMHandlers() {
     abortControllers.set(requestId, abortController);
 
     try {
-      const model = await getLLMModel(modelId, temperature, topP, true);
-      console.log(`Got model for streaming:`, model?.lc_kwargs);
+      const model = await getLLMModel(modelId, temperature, topP, maxTokens, true);
+      console.log(`Got model for streaming:`, model);
       const formattedMessages = formatMessagesForLLM(messages);
 
       // 使用中止信号创建流
-      // @ts-expect-error Disable type checking for now
-      const stream = await model.stream(formattedMessages, {
+      const stream = await model.stream(formattedMessages as any, {
         signal: abortController.signal,
       });
 
@@ -183,6 +178,7 @@ export function setupLLMHandlers() {
 
       // 处理流式响应
       for await (const chunk of stream) {
+        console.log('Received chunk:', chunk);
         if (chunk.content) {
           fullContent += chunk.content;
           // 将每个块发送到渲染进程
@@ -200,7 +196,6 @@ export function setupLLMHandlers() {
         content: fullContent,
         done: true,
       });
-      console.log('Stream done:', fullContent);
 
       // 清理中止控制器
       abortControllers.delete(requestId);

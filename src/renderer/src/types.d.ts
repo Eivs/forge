@@ -11,6 +11,7 @@ declare global {
         update: (id: number, data: any) => Promise<any>;
         delete: (id: number) => Promise<void>;
         rename: (id: number, title: string) => Promise<any>;
+        clearMessages: (id: number) => Promise<any>;
       };
 
       // 消息相关 API

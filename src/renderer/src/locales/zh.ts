@@ -26,6 +26,9 @@ export default {
     renameChat: '重命名聊天',
     enterNewTitle: '输入新标题',
     typeMessage: '输入消息...',
+    changeModel: '切换模型',
+    clearMessages: '清空消息',
+    clearMessagesConfirm: '您确定要清空此聊天中的所有消息吗？',
   },
   settings: {
     settings: '设置',
@@ -55,6 +58,8 @@ export default {
     temperatureDescription: '较低的值使输出更确定，较高的值使输出更随机',
     topP: 'Top P',
     topPDescription: '控制模型考虑的词汇范围，较低的值使输出更聚焦',
+    maxTokens: '最大 Tokens',
+    maxTokensDescription: '生成的最大 token 数量。留空则使用模型默认值',
     noModelsConfigured: '没有配置模型',
     addModel: '添加模型',
     editModel: '编辑模型',
