@@ -60,7 +60,7 @@ const ChatSettingsDialog = ({ open, onOpenChange, chatId }: ChatSettingsDialogPr
         systemPrompt,
         temperature,
         topP,
-        maxTokens: maxTokens,
+        maxTokens: maxTokens || undefined,
         modelId: Number(modelId), // 确保 modelId 是数字
       });
       onOpenChange(false);
@@ -160,7 +160,7 @@ const ChatSettingsDialog = ({ open, onOpenChange, chatId }: ChatSettingsDialogPr
               id="maxTokens"
               type="number"
               value={maxTokens === null ? '' : maxTokens}
-              onChange={(e) => {
+              onChange={e => {
                 const value = e.target.value === '' ? null : parseInt(e.target.value);
                 setMaxTokens(value);
               }}

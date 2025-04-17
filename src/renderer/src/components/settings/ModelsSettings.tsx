@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useModelStore } from '../../store/modelStore';
-import { Model, Provider } from '../../store/chatStore';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
+import { Model } from '../../store/chatStore';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -234,7 +234,7 @@ const ModelsSettings = () => {
               <div className="space-y-2">
                 <Label htmlFor="edit-provider">{t.provider.provider}</Label>
                 <Select
-                  value={editingModel.providerId.toString()}
+                  value={editingModel?.providerId?.toString()}
                   onValueChange={value =>
                     setEditingModel({ ...editingModel, providerId: parseInt(value) })
                   }

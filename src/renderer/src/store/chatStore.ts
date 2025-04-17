@@ -25,6 +25,7 @@ export interface Model {
   id: number;
   name: string;
   provider: Provider;
+  providerId?: number;
   contextSize: number;
   isActive: boolean;
 }
@@ -141,7 +142,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  clearMessages: async (id) => {
+  clearMessages: async id => {
     try {
       const updatedChat = await window.electron.chats.clearMessages(id);
       set(state => ({

@@ -74,3 +74,19 @@ model Model {
   providerId  Int
   chats       Chat[]
 }
+
+model MCPServer {
+  id              Int       @id @default(autoincrement())
+  name            String
+  description     String?
+  type            String    // "stdio" or "sse"
+  command         String?
+  args            String?   // JSON string of arguments array
+  env             String?   // JSON string of environment variables
+  url             String?
+  isEnabled       Boolean   @default(true)
+  isConnected     Boolean   @default(false)
+  connectionStatus String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+}

@@ -48,10 +48,10 @@ const ChatList = () => {
           chats.map(chat => (
             <div
               key={chat.id}
-              className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all group ${
+              className={`flex items-center rounded-md border justify-between p-3 rounded-lg cursor-pointer transition-all group ${
                 activeChat?.id === chat.id
-                  ? 'bg-primary/10 border-l-4 border-primary shadow-sm'
-                  : 'hover:bg-accent hover:shadow-sm border-l-4 border-transparent'
+                  ? 'border-border bg-muted text-card-foreground'
+                  : 'hover:bg-accent text-muted-foreground border-transparent'
               }`}
               onClick={() => handleChatClick(chat.id)}
             >

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useModelStore } from '../../store/modelStore';
 import { Provider } from '../../store/chatStore';
 import { Button } from '../ui/button';
-import { PlusIcon, Link2Icon } from '@radix-ui/react-icons';
+import { PlusIcon, GlobeIcon } from '@radix-ui/react-icons';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -46,18 +46,17 @@ const ProviderList = ({ providers, selectedProviderId, onSelectProvider }: Provi
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-2 border-b">
-        <div className="flex justify-between items-center">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setIsAddDialogOpen(true)}
-            className="h-7 text-xs px-2"
-          >
-            <PlusIcon className="h-3 w-3 mr-1" />
-            {t.provider.addProvider}
-          </Button>
-        </div>
+      <div className="flex justify-between items-center p-3 border-b sticky top-0 bg-background z-10">
+        <h3 className="text-sm font-medium">{t.settings.providers}</h3>
+        <Button
+          onClick={() => setIsAddDialogOpen(true)}
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0"
+          title={t.mcp.addServer}
+        >
+          <PlusIcon className="h-4 w-4" />
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -71,13 +70,15 @@ const ProviderList = ({ providers, selectedProviderId, onSelectProvider }: Provi
               <div
                 key={provider.id}
                 className={cn(
-                  'flex items-center justify-between py-2 px-4 rounded-md cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors text-base',
-                  selectedProviderId === provider.id && 'bg-accent text-accent-foreground'
+                  'flex items-center justify-between py-2 px-4 rounded-md cursor-pointer transition-colors text-base',
+                  selectedProviderId === provider.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-accent hover:text-accent-foreground'
                 )}
                 onClick={() => onSelectProvider(provider)}
               >
                 <div className="flex items-center">
-                  <Link2Icon className="h-3 w-3 mr-1 opacity-70" />
+                  <GlobeIcon className="h-3 w-3 mr-1 opacity-70" />
                   <span className="text-base">{provider.name}</span>
                 </div>
                 {provider.isActive && <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>}

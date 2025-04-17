@@ -2,10 +2,12 @@ import { ipcMain } from 'electron';
 import { getDatabase } from '../database';
 import { setupLLMHandlers } from './llm';
 import { setupMCPHandlers } from './mcp';
+import { setupMCPServerHandlers } from './mcpServer';
 
 export function setupAPIHandlers() {
   setupLLMHandlers();
   setupMCPHandlers();
+  setupMCPServerHandlers();
 
   // 获取所有对话
   ipcMain.handle('chats:getAll', async () => {

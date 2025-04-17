@@ -3,6 +3,72 @@
  * 仅作为参考，不用于实际类型检查，以避免与现有代码的类型冲突
  */
 
+declare global {
+  interface Window {
+    electron: {
+      chats: {
+        getAll: () => Promise<any[]>;
+        getById: (id: number) => Promise<any>;
+        create: (data: any) => Promise<any>;
+        update: (id: number, data: any) => Promise<any>;
+        delete: (id: number) => Promise<any>;
+        rename: (id: number, title: string) => Promise<any>;
+        clearMessages: (id: number) => Promise<any>;
+      };
+      messages: {
+        getByChatId: (chatId: number) => Promise<any[]>;
+        create: (data: any) => Promise<any>;
+        update: (id: number, data: any) => Promise<any>;
+        delete: (id: number) => Promise<any>;
+      };
+      models: {
+        getAll: () => Promise<any[]>;
+        getActive: () => Promise<any[]>;
+        create: (data: any) => Promise<any>;
+        update: (id: number, data: any) => Promise<any>;
+        delete: (id: number) => Promise<any>;
+        setActive: (id: number, isActive: boolean) => Promise<any>;
+      };
+      providers: {
+        getAll: () => Promise<any[]>;
+        getActive: () => Promise<any[]>;
+        create: (data: any) => Promise<any>;
+        update: (id: number, data: any) => Promise<any>;
+        delete: (id: number) => Promise<any>;
+        setActive: (id: number, isActive: boolean) => Promise<any>;
+      };
+      settings: {
+        getAll: () => Promise<any[]>;
+        getByKey: (key: string) => Promise<any>;
+        set: (key: string, value: string) => Promise<void>;
+      };
+      llm: {
+        chat: (messages: any[], modelParams: any) => Promise<any>;
+        streamChat: (messages: any[], modelParams: any) => Promise<any>;
+        streamChunk: (callback: (data: any) => void) => () => void;
+        abortGeneration: () => Promise<void>;
+      };
+      mcp: {
+        connect: (url: string) => Promise<boolean>;
+        disconnect: () => Promise<void>;
+        isConnected: () => Promise<boolean>;
+        getConnectionStatus: () => Promise<string>;
+        createMCPModel: (modelParams: any) => Promise<any>;
+      };
+      mcpServers: {
+        getAll: () => Promise<any[]>;
+        getById: (id: number) => Promise<any>;
+        create: (data: any) => Promise<any>;
+        update: (id: number, data: any) => Promise<any>;
+        delete: (id: number) => Promise<any>;
+      };
+      shell: {
+        openExternal: (url: string) => Promise<void>;
+      };
+    };
+  }
+}
+
 // 消息类型定义
 export interface MessageType {
   id: number;

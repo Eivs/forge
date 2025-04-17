@@ -13,6 +13,7 @@ interface Window {
       update: (id: number, data: any) => Promise<any>;
       delete: (id: number) => Promise<void>;
       rename: (id: number, title: string) => Promise<any>;
+      clearMessages: (id: number) => Promise<any>;
     };
 
     // 消息相关 API
@@ -65,6 +66,15 @@ interface Window {
       isConnected: () => Promise<boolean>;
       getConnectionStatus: () => Promise<'connected' | 'disconnected' | 'error'>;
       createMCPModel: (modelParams: any) => Promise<any>;
+    };
+
+    // MCP 服务器相关 API
+    mcpServers: {
+      getAll: () => Promise<any[]>;
+      getById: (id: number) => Promise<any>;
+      create: (data: any) => Promise<any>;
+      update: (id: number, data: any) => Promise<any>;
+      delete: (id: number) => Promise<void>;
     };
 
     // shell 相关 API

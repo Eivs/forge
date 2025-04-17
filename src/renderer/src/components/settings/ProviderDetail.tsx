@@ -4,14 +4,13 @@ import { Model, Provider } from '../../store/chatStore';
 import {
   CompactCard,
   CompactCardContent,
-  CompactCardDescription,
   CompactCardHeader,
   CompactCardTitle,
 } from './CompactCard';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { CompactSwitch } from './CompactSwitch';
+import { Switch } from '../ui/switch';
 import { PlusIcon, TrashIcon, Pencil1Icon, ArrowLeftIcon } from '@radix-ui/react-icons';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { useLanguage } from '../../locales';
@@ -174,38 +173,34 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
           <div className="flex justify-between items-center">
             <CompactCardTitle>{t.provider.provider}</CompactCardTitle>
             <div className="flex items-center space-x-1">
-              <CompactSwitch
-                checked={provider.isActive}
-                onCheckedChange={handleToggleProviderActive}
-              />
+              <Switch checked={provider.isActive} onCheckedChange={handleToggleProviderActive} />
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
+                size="icon"
+                className="p-0"
                 onClick={() => setIsEditProviderOpen(true)}
               >
-                <Pencil1Icon className="h-3 w-3" />
+                <Pencil1Icon />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                onClick={handleDeleteProvider}
-              >
-                <TrashIcon className="h-3 w-3" />
+              <Button variant="ghost" size="icon" className="p-0" onClick={handleDeleteProvider}>
+                <TrashIcon />
               </Button>
             </div>
           </div>
         </CompactCardHeader>
         <CompactCardContent>
-          <div className="space-y-1 text-xs">
+          <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-muted-foreground">API Url:</span>
-              <span className="text-xs truncate max-w-[200px]">{provider.baseUrl}</span>
+              <span className="truncate max-w-[200px] text-muted-foreground">
+                {provider.baseUrl}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">API Key:</span>
-              <span>{provider.apiKey ? '**********' : t.provider.notSet}</span>
+              <span className="truncate max-w-[200px] text-muted-foreground">
+                {provider.apiKey ? '**********' : t.provider.notSet}
+              </span>
             </div>
           </div>
         </CompactCardContent>
@@ -215,13 +210,8 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
       <div className="space-y-2">
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-medium">{t.model.model}</h3>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setIsAddModelOpen(true)}
-            className="h-7 text-xs px-2"
-          >
-            <PlusIcon className="mr-1 h-3 w-3" />
+          <Button size="default" variant="outline" onClick={() => setIsAddModelOpen(true)}>
+            <PlusIcon className="mr-1" />
             {t.model.addModel}
           </Button>
         </div>
@@ -238,38 +228,38 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
                   <div className="flex justify-between items-center">
                     <CompactCardTitle>{model.name}</CompactCardTitle>
                     <div className="flex items-center space-x-1">
-                      <CompactSwitch
+                      <Switch
                         checked={model.isActive}
                         onCheckedChange={checked => handleToggleModelActive(model.id, checked)}
                       />
                       <Button
                         variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0"
+                        size="icon"
+                        className="p-0"
                         onClick={() => {
                           setEditingModel(model);
                           setIsEditModelOpen(true);
                         }}
                       >
-                        <Pencil1Icon className="h-3 w-3" />
+                        <Pencil1Icon />
                       </Button>
                       <Button
                         variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0"
+                        size="icon"
+                        className="p-0"
                         onClick={() => handleDeleteModel(model.id)}
                       >
-                        <TrashIcon className="h-3 w-3" />
+                        <TrashIcon />
                       </Button>
                     </div>
                   </div>
                 </CompactCardHeader>
                 <CompactCardContent>
-                  <div className="text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t.model.contextSize}:</span>
-                      <span>{model.contextSize.toLocaleString()}</span>
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t.model.contextSize}:</span>
+                    <span className="text-muted-foreground">
+                      {model.contextSize.toLocaleString()}
+                    </span>
                   </div>
                 </CompactCardContent>
               </CompactCard>
@@ -350,7 +340,7 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
               />
             </div>
             <div className="flex items-center space-x-2">
-              <CompactSwitch
+              <Switch
                 id="isActive"
                 checked={newModel.isActive}
                 onCheckedChange={checked => setNewModel({ ...newModel, isActive: checked })}

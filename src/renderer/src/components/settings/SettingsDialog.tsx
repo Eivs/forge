@@ -68,16 +68,16 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="flex flex-col h-[calc(75vh-160px)]"
+          className="flex flex-col h-[calc(75vh-80px)]"
         >
           <TabsList className="px-4 mb-1">
-            <TabsTrigger value="general" className="text-xs py-1">
+            <TabsTrigger value="general" className="py-1">
               {t.settings.general}
             </TabsTrigger>
-            <TabsTrigger value="providers" className="text-xs py-1">
+            <TabsTrigger value="providers" className="py-1">
               {t.settings.providers}
             </TabsTrigger>
-            <TabsTrigger value="mcp" className="text-xs py-1">
+            <TabsTrigger value="mcp" className="py-1">
               MCP
             </TabsTrigger>
           </TabsList>
