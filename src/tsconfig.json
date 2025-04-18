@@ -19,6 +19,6 @@
     "emitDecoratorMetadata": true,
     "esModuleInterop": true
   },
-  "include": ["."],
+  "include": [".", "renderer/src/types/**/*.d.ts"],
   "references": [{ "path": "../tsconfig.node.json" }]
 }

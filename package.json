@@ -4,7 +4,7 @@
   "description": "AI assistant desktop application with multiple model support",
   "main": "./dist/main/index.js",
   "scripts": {
-    "dev": "electron-vite dev --outDir=dist",
+    "dev": "electron-vite dev --outDir=dist --noSandbox",
     "build": "electron-vite build --outDir=dist",
     "start": "ts-node src/index.ts",
     "prisma:generate": "prisma generate",
@@ -12,7 +12,15 @@
     "prisma:studio": "prisma studio",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\""
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "postinstall": "install-app-deps",
+    "generate-icons": "node scripts/generate-icons.js",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "publish": "npm run build && electron-builder --publish always"
   },
   "keywords": [
     "electron",
@@ -33,6 +41,9 @@
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.17",
     "electron": "^29.1.0",
+    "electron-builder": "^26.0.12",
+    "electron-icon-builder": "^2.0.1",
+    "electron-icon-maker": "^0.0.5",
     "electron-vite": "^3.1.0",
     "eslint": "^9.24.0",
     "eslint-config-prettier": "^10.1.2",
@@ -49,11 +60,10 @@
     "vite": "^6.2.6"
   },
   "dependencies": {
-    "@langchain/deepseek": "^0.0.1",
     "@langchain/langgraph": "^0.2.64",
     "@langchain/mcp-adapters": "^0.4.2",
-    "@langchain/openai": "^0.0.14",
-    "@modelcontextprotocol/sdk": "^1.9.0",
+    "@langchain/openai": "^0.5.5",
+    "@modelcontextprotocol/sdk": "^1.10.0",
     "@prisma/client": "^6.6.0",
     "@radix-ui/react-context-menu": "^2.1.5",
     "@radix-ui/react-dialog": "^1.1.7",

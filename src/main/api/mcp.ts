@@ -3,12 +3,32 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { MultiServerMCPClient, loadMcpTools } from '@langchain/mcp-adapters';
 import { getDatabase } from '../database';
+import { execSync } from 'child_process';
+import { existsSync } from 'fs';
+import testMCPIntegration from './mcpTest';
 
 // 全局 MCP 客户端实例
 let multiServerClient: MultiServerMCPClient | null = null;
 let sseClient: Client | null = null;
 let connectionStatus: 'connected' | 'disconnected' | 'error' = 'disconnected';
 let mcpTools: any[] = [];
+
+// 获取系统 Node.js 路径
+function getNodePath() {
+  try {
+    // 尝试使用 which 命令获取 node 路径
+    const nodePath = execSync('which node').toString().trim();
+    if (nodePath && existsSync(nodePath)) {
+      console.log(`Found Node.js path: ${nodePath}`);
+      return nodePath;
+    }
+  } catch (error) {
+    console.warn('Could not determine Node.js path using which command:', error);
+  }
+
+  console.warn('Could not find Node.js path, using default "node"');
+  return process.execPath;
+}
 
 // 初始化 MCP 客户端
 async function initializeMultiServerClient() {
@@ -26,10 +46,13 @@ async function initializeMultiServerClient() {
       return null;
     }
 
+    // 获取 Node.js 路径
+    const nodePath = getNodePath();
+
     // 构建 MultiServerMCPClient 配置
     const mcpConfig: any = {
       // 全局工具配置选项
-      throwOnLoadError: true,
+      throwOnLoadError: false, // 改为 false 以避免单个服务器错误导致整个客户端失败
       prefixToolNameWithServerName: true,
       additionalToolNamePrefix: 'mcp',
       mcpServers: {},
@@ -40,7 +63,8 @@ async function initializeMultiServerClient() {
       const serverName = server.name.replace(/\s+/g, '_').toLowerCase();
 
       if (server.type === 'stdio' && server.command) {
-        mcpConfig.mcpServers[serverName] = {
+        // 构建基本配置
+        const serverConfig: any = {
           transport: 'stdio',
           command: server.command,
           args: server.args ? JSON.parse(server.args) : [],
@@ -51,10 +75,52 @@ async function initializeMultiServerClient() {
           },
         };
 
-        // 如果有环境变量，添加到配置中
+        // 添加环境变量
+        let env: Record<string, string> = {};
         if (server.env) {
-          mcpConfig.mcpServers[serverName].env = JSON.parse(server.env);
+          try {
+            env = JSON.parse(server.env);
+          } catch (error) {
+            console.error(`Error parsing env for server ${serverName}:`, error);
+          }
         }
+
+        // 确保 PATH 环境变量包含 Node.js 路径
+        const nodeBinDir = nodePath.substring(0, nodePath.lastIndexOf('/'));
+        env.PATH = env.PATH ? `${nodeBinDir}:${env.PATH}` : nodeBinDir;
+
+        // 添加 NODE_PATH 环境变量
+        if (!env.NODE_PATH) {
+          env.NODE_PATH = process.env.NODE_PATH || nodePath;
+        }
+
+        // 添加 SHELL 环境变量以确保 sh 命令可用
+        if (!env.SHELL) {
+          env.SHELL = process.env.SHELL || '/bin/sh';
+        }
+
+        // 如果命令是 npx 或 uvx，确保使用完整路径
+        if (server.command === 'npx' || server.command === 'uvx') {
+          const npmBinPath = execSync('which ' + server.command)
+            .toString()
+            .trim();
+          if (npmBinPath) {
+            serverConfig.command = npmBinPath;
+          }
+        }
+
+        serverConfig.env = env;
+        mcpConfig.mcpServers[serverName] = serverConfig;
+
+        console.log(`Configured stdio server ${serverName}:`, {
+          command: serverConfig.command,
+          args: serverConfig.args,
+          env: {
+            PATH: serverConfig.env.PATH,
+            NODE_PATH: serverConfig.env.NODE_PATH,
+            SHELL: serverConfig.env.SHELL,
+          },
+        });
       } else if (server.type === 'sse' && server.url) {
         mcpConfig.mcpServers[serverName] = {
           transport: 'sse',
@@ -65,16 +131,22 @@ async function initializeMultiServerClient() {
             delayMs: 2000,
           },
         };
+        console.log(`Configured SSE server ${serverName}: ${server.url}`);
       }
     });
+
+    console.log('Creating MultiServerMCPClient with config:', JSON.stringify(mcpConfig, null, 2));
 
     // 创建 MultiServerMCPClient 实例
     const client = new MultiServerMCPClient(mcpConfig);
 
     // 加载所有工具
+    console.log('Loading MCP tools...');
     const tools = await client.getTools();
     mcpTools = tools;
-
+    mcpTools.forEach(tool => {
+      console.log(`Loaded tool: ${tool.name}`);
+    });
     console.log(`Loaded ${tools.length} MCP tools`);
     connectionStatus = 'connected';
 
@@ -87,6 +159,17 @@ async function initializeMultiServerClient() {
 }
 
 export function setupMCPHandlers() {
+  // 测试 MCP 集成
+  ipcMain.handle('mcp:test', async () => {
+    try {
+      const result = await testMCPIntegration();
+      return result;
+    } catch (error: any) {
+      console.error('Error testing MCP integration:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
   // 连接到 MCP 服务器 (SSE 模式)
   ipcMain.handle('mcp:connect', async (_: IpcMainInvokeEvent, url: string) => {
     try {

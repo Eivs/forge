@@ -3,6 +3,7 @@ import { useLanguage } from '../../locales';
 import MCPServerList from './MCPServerList';
 import MCPServerDetail from './MCPServerDetail';
 import { useToast } from '../ui/use-toast';
+import { Button } from '../ui/button';
 
 // MCP 服务器类型定义
 export interface MCPServer {
@@ -24,6 +25,8 @@ const MCPSettings = () => {
   const { toast } = useToast();
   const [servers, setServers] = useState<MCPServer[]>([]);
   const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
+  const [isTestingMCP, setIsTestingMCP] = useState(false);
+  const [testResult, setTestResult] = useState<any>(null);
 
   useEffect(() => {
     const loadMCPServers = async () => {
@@ -324,25 +327,98 @@ const MCPSettings = () => {
     setSelectedServerId(serverId);
   };
 
+  // 测试 MCP 集成
+  const handleTestMCPIntegration = async () => {
+    try {
+      setIsTestingMCP(true);
+      setTestResult(null);
+
+      // 调用测试函数
+      const result = await window.electron.mcp.test();
+      console.log('MCP integration test result:', result);
+
+      setTestResult(result);
+
+      // 显示测试结果提示
+      if (result.success) {
+        toast({
+          title: 'MCP 集成测试成功',
+          description: '成功调用 MCP 工具并获取响应',
+          variant: 'default',
+        });
+      } else {
+        toast({
+          title: 'MCP 集成测试失败',
+          description: result.error ? String(result.error) : '未知错误',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error testing MCP integration:', error);
+      setTestResult({ success: false, error });
+
+      toast({
+        title: 'MCP 集成测试失败',
+        description: String(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsTestingMCP(false);
+    }
+  };
+
   return (
-    <div className="flex h-full border-t">
-      <div className="w-1/4 border-r h-full overflow-y-auto">
-        <MCPServerList
-          servers={servers}
-          selectedServerId={selectedServerId}
-          onSelectServer={handleSelectServer}
-          onAddServer={handleAddServer}
-        />
+    <div className="flex flex-col h-full border-t">
+      <div className="p-3 border-b flex justify-between items-center">
+        <h3 className="text-lg font-medium">{t.mcp.serverConfig}</h3>
+        <Button
+          onClick={handleTestMCPIntegration}
+          disabled={isTestingMCP || !servers.some(s => s.isEnabled && s.isConnected)}
+          variant="outline"
+          size="sm"
+        >
+          {isTestingMCP ? t.common.loading : 'Test MCP Integration'}
+        </Button>
       </div>
-      <div className="w-3/4 p-3 h-full overflow-y-auto">
-        <MCPServerDetail
-          server={
-            selectedServerId ? servers.find(s => String(s.id) === selectedServerId) || null : null
-          }
-          onSave={handleSaveServer}
-          onDelete={handleDeleteServer}
-          onTest={handleTestServer}
-        />
+
+      {testResult && (
+        <div className="p-3 border-b">
+          <div className={`p-3 rounded-md ${testResult.success ? 'bg-green-50 dark:bg-green-950' : 'bg-red-50 dark:bg-red-950'}`}>
+            <h4 className="font-medium mb-2">{testResult.success ? 'MCP 集成测试成功' : 'MCP 集成测试失败'}</h4>
+            {testResult.success && testResult.assistantMessage && (
+              <div className="text-sm">
+                <p className="font-medium mb-1">助手回复:</p>
+                <p className="whitespace-pre-wrap">{testResult.assistantMessage}</p>
+              </div>
+            )}
+            {!testResult.success && testResult.error && (
+              <div className="text-sm text-red-600 dark:text-red-400">
+                <p>{String(testResult.error)}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-1 overflow-hidden">
+        <div className="w-1/4 border-r h-full overflow-y-auto">
+          <MCPServerList
+            servers={servers}
+            selectedServerId={selectedServerId}
+            onSelectServer={handleSelectServer}
+            onAddServer={handleAddServer}
+          />
+        </div>
+        <div className="w-3/4 p-3 h-full overflow-y-auto">
+          <MCPServerDetail
+            server={
+              selectedServerId ? servers.find(s => String(s.id) === selectedServerId) || null : null
+            }
+            onSave={handleSaveServer}
+            onDelete={handleDeleteServer}
+            onTest={handleTestServer}
+          />
+        </div>
       </div>
     </div>
   );

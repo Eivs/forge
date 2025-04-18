@@ -211,6 +211,27 @@ npm run build
 npm start
 ```
 
+### 发布应用
+
+Forge 使用 GitHub Actions 自动构建和发布应用程序。当创建一个新的 Git 标签（以 `v` 开头）并推送到 GitHub 时，将自动触发构建和发布流程。
+
+```bash
+# 更新 package.json 中的版本号
+
+# 提交更改
+git add .
+git commit -m "准备发布 v1.0.0"
+
+# 创建标签
+git tag v1.0.0
+
+# 推送标签
+git push origin main
+git push origin v1.0.0
+```
+
+详细的发布指南请参阅 [docs/release-guide.md](docs/release-guide.md)。
+
 ## 许可证
 
 MIT

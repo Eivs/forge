@@ -107,9 +107,10 @@ contextBridge.exposeInMainWorld('electron', {
     getConnectionStatus: () => ipcRenderer.invoke('mcp:getConnectionStatus'),
     createMCPModel: (modelParams: any) => ipcRenderer.invoke('mcp:createMCPModel', modelParams),
     initialize: () => ipcRenderer.invoke('mcp:initialize'),
+    test: () => ipcRenderer.invoke('mcp:test'), // 测试 MCP 集成
   },
 
-  // MCP 服务器相关 API
+  // MCP 服务器管理相关 API
   mcpServers: {
     getAll: () => ipcRenderer.invoke('mcpServers:getAll'),
     getById: (id: number) => ipcRenderer.invoke('mcpServers:getById', id),

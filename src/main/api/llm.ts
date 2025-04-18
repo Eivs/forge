@@ -1,10 +1,10 @@
 import { ipcMain } from 'electron';
 import { ChatOpenAI } from '@langchain/openai';
-import { ChatDeepSeek } from '@langchain/deepseek';
 import { randomUUID } from 'crypto';
 import { getDatabase } from '../database';
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 import { getMCPTools } from './mcp';
+import { createReactAgent } from '@langchain/langgraph/prebuilt';
 
 // 存储正在进行的 LLM 生成任务的中止控制器映射
 const abortControllers = new Map<string, AbortController>();
@@ -58,15 +58,12 @@ async function getLLMModel(
     openAIApiKey: apiKey,
     apiKey,
     timeout: 15000,
+    verbose: process.env.NODE_ENV === 'development' ? true : false,
+    maxTokens,
     configuration: {
       baseURL: model.provider.baseUrl,
     },
   };
-
-  // 如果提供了 maxTokens，则添加到配置中
-  if (maxTokens) {
-    config.maxTokens = maxTokens;
-  }
 
   // 创建 LLM 模型实例
   let llmModel;
@@ -76,10 +73,6 @@ async function getLLMModel(
       break;
     // TODO: 根据需要添加其他提供商的处理
 
-    case 'deepseek':
-      llmModel = new ChatDeepSeek(config);
-      break;
-
     default:
       console.log(
         `Using ${model.provider.name} API with baseURL: ${model.provider.baseUrl}, apiKey: ${apiKey ? 'set' : 'not set'}`
@@ -88,17 +81,24 @@ async function getLLMModel(
       break;
   }
 
-  // 如果需要使用 MCP 工具，则绑定工具
+  // 如果需要使用 MCP 工具，则创建 ReAct 代理
   if (useMCP) {
-    if (!llmModel.bindTools) {
-      console.log('LLM model does not support binding tools');
-      return llmModel;
-    }
     const mcpTools = getMCPTools();
     if (mcpTools && mcpTools.length > 0) {
-      console.log(`Binding ${mcpTools.length} MCP tools to LLM model`);
-
-      return llmModel.bindTools(mcpTools);
+      console.log(`Creating ReAct agent with ${mcpTools.length} MCP tools`);
+      try {
+        // 创建 ReAct 代理
+        const agent = createReactAgent({
+          llm: llmModel as any,
+          tools: mcpTools,
+        });
+        return agent;
+      } catch (error) {
+        console.error('Error creating ReAct agent:', error);
+        // 如果创建代理失败，返回原始模型
+        console.log('Falling back to original model without tools');
+        return llmModel;
+      }
     } else {
       console.warn('No MCP tools available to bind');
     }
@@ -171,8 +171,84 @@ export function setupLLMHandlers() {
       if (response) {
         console.log(response);
       }
+      // 处理不同类型的响应
+      // 使用类型断言来处理不同类型的响应
+      console.log('Processing response:', JSON.stringify(response, null, 2));
 
-      return response.content;
+      if (useMCP) {
+        // 记录完整的响应对象，用于调试
+        console.log('Full ReAct agent response:', JSON.stringify(response, null, 2));
+
+        // 处理 ReAct 代理的响应
+        // 检查新版本 createReactAgent 返回的消息格式
+        if ((response as any).messages) {
+          // ReAct 代理返回的是包含 messages 数组的对象
+          const messages = (response as any).messages;
+          console.log(`Response has ${messages.length} messages`);
+
+          // 找到最后一条助手消息
+          for (let i = messages.length - 1; i >= 0; i--) {
+            const message = messages[i];
+            if ((message.role === 'assistant' || message.type === 'ai') && message.content) {
+              console.log(`Found assistant message with content: ${message.content}`);
+              return message.content;
+            }
+          }
+
+          // 如果没有找到助手消息，返回最后一条消息的内容
+          if (messages.length > 0 && messages[messages.length - 1].content) {
+            return messages[messages.length - 1].content;
+          }
+        } else if ((response as any).agent && (response as any).agent.messages) {
+          // 处理包含 agent 字段的响应
+          const messages = (response as any).agent.messages;
+          console.log(`Agent response has ${messages.length} messages`);
+
+          // 找到最后一条助手消息
+          for (let i = messages.length - 1; i >= 0; i--) {
+            const message = messages[i];
+            if ((message.role === 'assistant' || message.type === 'ai') && message.content) {
+              console.log(`Found assistant message with content: ${message.content}`);
+              return message.content;
+            }
+          }
+
+          // 如果没有找到助手消息，返回最后一条消息的内容
+          if (messages.length > 0 && messages[messages.length - 1].content) {
+            return messages[messages.length - 1].content;
+          }
+        } else if (Array.isArray(response)) {
+          // 处理直接返回消息数组的情况
+          console.log(`Response is an array with ${response.length} items`);
+
+          // 找到最后一条助手消息
+          for (let i = response.length - 1; i >= 0; i--) {
+            const message = response[i];
+            if ((message.role === 'assistant' || message.type === 'ai') && message.content) {
+              console.log(`Found assistant message with content: ${message.content}`);
+              return message.content;
+            }
+          }
+
+          // 如果没有找到助手消息，返回最后一条消息的内容
+          if (response.length > 0 && response[response.length - 1].content) {
+            return response[response.length - 1].content;
+          }
+        }
+
+        // 如果还是没有找到内容，返回默认消息
+        console.warn('Could not extract content from ReAct agent response');
+        return '我将帮助您完成这个任务。';
+      }
+
+      // 处理标准 LLM 响应
+      if ((response as any).content) {
+        return (response as any).content;
+      }
+
+      // 其他情况，尝试将整个响应转换为字符串
+      console.log('No content found in response, returning JSON string');
+      return JSON.stringify(response);
     } catch (error) {
       console.error('Error in LLM chat:', error);
       throw error;
@@ -202,20 +278,152 @@ export function setupLLMHandlers() {
       let fullContent = '';
 
       // 处理流式响应
-      for await (const chunk of stream) {
-        console.log('Received chunk:', chunk);
-        if (chunk.content) {
-          fullContent += chunk.content;
-          // 将每个块发送到渲染进程
+      if (useMCP) {
+        // 处理 ReAct 代理的流式响应
+        console.log('Processing ReAct agent stream response');
+        let hasContent = false;
+        let lastSentContent = ''; // 记录最后发送的内容，避免重复
+        const processedChunks = new Set(); // 记录已处理的块，避免重复处理
+
+        for await (const chunk of stream) {
+          // 生成块的唯一标识符，避免重复处理
+          const chunkId = JSON.stringify(chunk);
+          if (processedChunks.has(chunkId)) {
+            console.log('Skipping already processed chunk');
+            continue;
+          }
+          processedChunks.add(chunkId);
+
+          // 如果是 ReAct 代理的响应，它可能包含 agent 或 tools 字段
+          if ((chunk as any).agent && (chunk as any).agent.messages) {
+            const messages = (chunk as any).agent.messages;
+            console.log(`Agent chunk has ${messages.length} messages`);
+
+            // 找到最后一条助手消息
+            for (let i = messages.length - 1; i >= 0; i--) {
+              const message = messages[i];
+              if ((message.role === 'assistant' || message.type === 'ai') && message.content) {
+                const content = message.content;
+
+                // 检查是否与上次发送的内容相同
+                if (content === lastSentContent) {
+                  console.log('Skipping duplicate content');
+                  break;
+                }
+
+                console.log(`Found assistant message with content: ${content}`);
+                fullContent = content; // 替换为完整内容
+                lastSentContent = content;
+                hasContent = true;
+                event.sender.send(`llm:stream-chunk`, {
+                  requestId,
+                  content: content,
+                  fullContent: fullContent,
+                });
+                break;
+              }
+            }
+          } else if ((chunk as any).tools && (chunk as any).tools.messages) {
+            // 处理工具消息
+            console.log('Processing tool messages');
+            const toolMessages = (chunk as any).tools.messages;
+            for (const message of toolMessages) {
+              if (message.content) {
+                console.log(`Tool message content: ${message.content}`);
+                // 将工具消息也发送到前端，但不更新 fullContent
+                // 不将工具消息发送到前端，只记录在日志中
+                // event.sender.send(`llm:stream-chunk`, {
+                //   requestId,
+                //   toolMessage: message.content,
+                // });
+              }
+            }
+          } else if ((chunk as any).messages) {
+            // 直接处理消息数组
+            console.log('Processing direct messages array');
+            const messages = (chunk as any).messages;
+            for (let i = messages.length - 1; i >= 0; i--) {
+              const message = messages[i];
+              if ((message.role === 'assistant' || message.type === 'ai') && message.content) {
+                const content = message.content;
+
+                // 检查是否与上次发送的内容相同
+                if (content === lastSentContent) {
+                  console.log('Skipping duplicate content');
+                  break;
+                }
+
+                console.log(`Found assistant message with content: ${content}`);
+                fullContent = content;
+                lastSentContent = content;
+                hasContent = true;
+                event.sender.send(`llm:stream-chunk`, {
+                  requestId,
+                  content: content,
+                  fullContent: fullContent,
+                });
+                break;
+              }
+            }
+          } else if (Array.isArray(chunk)) {
+            // 处理直接返回数组的情况
+            console.log(`Chunk is an array with ${chunk.length} items`);
+
+            // 找到最后一条助手消息
+            for (let i = chunk.length - 1; i >= 0; i--) {
+              const message = chunk[i];
+              if ((message.role === 'assistant' || message.type === 'ai') && message.content) {
+                const content = message.content;
+
+                // 检查是否与上次发送的内容相同
+                if (content === lastSentContent) {
+                  console.log('Skipping duplicate content');
+                  break;
+                }
+
+                console.log(`Found assistant message with content: ${content}`);
+                fullContent = content;
+                lastSentContent = content;
+                hasContent = true;
+                event.sender.send(`llm:stream-chunk`, {
+                  requestId,
+                  content: content,
+                  fullContent: fullContent,
+                });
+                break;
+              }
+            }
+          }
+        }
+
+        // 如果没有找到内容，发送一个默认消息
+        if (!hasContent) {
+          console.log('No content found in ReAct agent response, sending default message');
+          fullContent = 'No content found in ReAct agent response';
           event.sender.send(`llm:stream-chunk`, {
             requestId,
-            content: chunk.content,
+            content: fullContent,
             fullContent: fullContent,
           });
+        }
+      } else {
+        // 处理标准 LLM 流式响应
+        for await (const chunk of stream) {
+          if ((chunk as any).content) {
+            fullContent += (chunk as any).content;
+            // 将每个块发送到渲染进程
+            event.sender.send(`llm:stream-chunk`, {
+              requestId,
+              content: (chunk as any).content,
+              fullContent: fullContent,
+            });
+          }
         }
       }
 
       // 发送完成信号
+      // 确保只发送一次完成信号
+      console.log(`Sending completion signal with content: ${fullContent}`);
       event.sender.send('llm:stream-chunk', {
         requestId,
         content: fullContent,
