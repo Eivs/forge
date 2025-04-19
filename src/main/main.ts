@@ -2,9 +2,6 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'path';
 import { initializeDatabase } from './database';
 import { setupAPIHandlers } from './api';
-import { config } from 'dotenv';
-
-config();
 
 // 处理在 Windows 上安装/卸载时创建/删除快捷方式。
 (async () => {

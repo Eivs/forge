@@ -1,24 +1,19 @@
 import { getPrismaClient } from './lib/prisma';
 import { PrismaClient } from '@prisma/client';
+import { defaultProviders, defaultModels, defaultUser, defaultSettings } from './initialState';
+
 // import fs from 'fs';
 // import path from 'path';
 // import { app } from 'electron';
-import { defaultProviders, defaultModels, defaultUser, defaultSettings } from './initialState';
 
 export async function initializeDatabase() {
   try {
     // // 获取 SQLite 数据库的用户数据路径
-    // const userDataPath = app.getPath('userData');
-    // const dbPath = path.join(userDataPath, 'forge.sqlite');
+    // const dbPath = path.join(app.getPath('userData'), 'forge.sqlite');
     // const prismaDbPath = path.join(process.cwd(), 'prisma', 'forge.sqlite');
-    // console.log('Database path:', dbPath);
-    // console.log('Prisma database path:', prismaDbPath);
-    // console.log('Prisma client path:', PrismaClient);
-
     // // 检查数据库是否存在于用户数据目录中
     // if (fs.existsSync(dbPath)) {
     //   console.log('Existing database found, copying to Prisma directory');
-    //   // 如果 prisma 目录不存在，则创建它
     //   const prismaDir = path.join(process.cwd(), 'prisma');
     //   if (!fs.existsSync(prismaDir)) {
     //     fs.mkdirSync(prismaDir, { recursive: true });

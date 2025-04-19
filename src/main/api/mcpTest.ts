@@ -8,7 +8,7 @@ import { createReactAgent } from '@langchain/langgraph/prebuilt';
  */
 
 // 测试配置
-const apiKey = 'sk-Zzq5py4iKKZnD74Dv1066pnI1LzrsTYbI4f4hQRcguyB8BQy';
+const apiKey = 'sk-';
 const baseURL = 'https://openapi.coreshub.cn/v1';
 const modelName = 'DeepSeek-V3';
 
@@ -71,7 +71,7 @@ async function getTools(mcpServers: any) {
 export async function testMCPIntegration() {
   try {
     console.log('Testing MCP integration...');
-    
+
     // 创建 OpenAI 模型
     const model = new ChatOpenAI({
       modelName: modelName,
@@ -90,7 +90,7 @@ export async function testMCPIntegration() {
     // 获取 MCP 工具
     console.log('Getting MCP tools...');
     const tools = await getTools(mcpServers);
-    
+
     if (tools.length === 0) {
       console.error('No MCP tools found, cannot create agent');
       return { success: false, error: 'No MCP tools found' };
@@ -111,7 +111,7 @@ export async function testMCPIntegration() {
 
     // 记录完整响应
     console.log('Agent response:', JSON.stringify(response, null, 2));
-    
+
     // 提取助手消息
     let assistantMessage = '';
     if (Array.isArray(response)) {
