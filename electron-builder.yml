@@ -19,10 +19,10 @@ files:
 
 # 额外资源
 extraResources:
-  - from: prisma/schema.prisma
-    to: prisma/schema.prisma
-  - from: node_modules/.prisma
-    to: .prisma
+  - from: prisma/forge.sqlite
+    to: prisma/forge.sqlite
+  - from: node_modules/.prisma/client
+    to: node_modules/.prisma/client
 
 # 发布配置
 publish:

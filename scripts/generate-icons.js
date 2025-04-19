@@ -8,10 +8,16 @@
  * 使用方法：
  * node scripts/generate-icons.js
  */
-/* eslint-disable */
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+
+import { execSync } from 'child_process';
+import process from 'node:process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+/* global console */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // 确保目录存在
 const buildDir = path.join(__dirname, '../build');
@@ -30,25 +36,25 @@ const iconPath = path.join(__dirname, '../build/icons/png/icon.png');
 
 // 检查源图标是否存在
 if (!fs.existsSync(iconPath)) {
-  console.error('错误: 源图标不存在:', iconPath);
-  console.error('请确保在 build/icons/png 目录中有 icon.png 文件');
+  console.error('Error: Source icon not found:', iconPath);
+  console.error('Please ensure icon.png exists in the build/icons/png directory');
   process.exit(1);
 }
 
-console.log('开始生成应用图标...');
+console.log('Starting icon generation...');
 
 try {
   // 使用 electron-icon-builder 生成图标
   const command = 'npx electron-icon-builder --input="' + iconPath + '" --output=build';
-  console.log('执行命令:', command);
+  console.log('Executing command:', command);
   execSync(command, { stdio: 'inherit' });
 
-  console.log('图标生成成功！');
-  console.log('图标文件位置：');
+  console.log('Icons generated successfully!');
+  console.log('Icon file locations:');
   console.log('- Windows: build/icons/win/icon.ico');
   console.log('- macOS: build/icons/mac/icon.icns');
   console.log('- Linux: build/icons/png/*.png');
 } catch (error) {
-  console.error('生成图标时出错:', error.message);
+  console.error('Error generating icons:', error.message);
   process.exit(1);
 }
