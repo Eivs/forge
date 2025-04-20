@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, useCallback } from 'react';
 import {
   CompactCard,
   CompactCardContent,
@@ -11,8 +11,7 @@ import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Switch } from '../ui/switch';
-import { TrashIcon, ExclamationTriangleIcon, CheckCircledIcon } from '@radix-ui/react-icons';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { TrashIcon } from '@radix-ui/react-icons';
 import {
   Dialog,
   DialogContent,
@@ -22,102 +21,135 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { useLanguage } from '../../locales';
+import { useToast } from '../ui/use-toast';
 import { MCPServer } from './MCPSettings';
 
 interface MCPServerDetailProps {
   server: MCPServer | null;
   onSave: (server: MCPServer) => Promise<void>;
   onDelete: (serverId: string) => Promise<void>;
-  onTest: (server: MCPServer) => Promise<void>;
+  onTest: (server: MCPServer) => Promise<boolean>;
 }
 
 // 基础信息表单组件
-const BasicInfoForm = memo(
-  ({
-    server,
-    onChange,
-    disabled,
-  }: {
-    server: MCPServer;
-    onChange: (updates: Partial<MCPServer>) => void;
-    disabled: boolean;
-  }) => {
-    const { t } = useLanguage();
+const BasicInfoForm = ({
+  server,
+  onChange,
+  disabled,
+}: {
+  server: MCPServer;
+  onChange: (updates: Partial<MCPServer>) => void;
+  disabled: boolean;
+}) => {
+  const { t } = useLanguage();
 
-    return (
-      <>
-        <div className="space-y-2">
-          <Label htmlFor="mcpName" className="flex items-center">
-            <span className="text-red-500 mr-1">*</span>
-            {t.mcp.name}
-          </Label>
-          <Input
-            id="mcpName"
-            value={server.name}
-            onChange={e => onChange({ name: e.target.value })}
-            placeholder="MCP 服务器"
-            disabled={disabled}
-          />
-        </div>
+  return (
+    <>
+      <div className="space-y-2">
+        <Label htmlFor="mcpName" className="flex items-center">
+          <span className="text-red-500 mr-1">*</span>
+          {t.mcp.name}
+        </Label>
+        <Input
+          id="mcpName"
+          value={server.name}
+          onChange={e => onChange({ name: e.target.value })}
+          placeholder="MCP 服务器"
+          disabled={disabled}
+        />
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="mcpDescription">{t.mcp.description}</Label>
-          <Input
-            id="mcpDescription"
-            value={server.description || ''}
-            onChange={e => onChange({ description: e.target.value })}
-            placeholder=""
-            disabled={disabled}
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="mcpDescription">{t.mcp.description}</Label>
+        <Input
+          id="mcpDescription"
+          value={server.description || ''}
+          onChange={e => onChange({ description: e.target.value })}
+          placeholder=""
+          disabled={disabled}
+        />
+      </div>
 
-        <div className="space-y-2">
-          <Label className="flex items-center">
-            <span className="text-red-500 mr-1">*</span>
-            {t.mcp.type}
-          </Label>
-          <RadioGroup
-            value={server.type}
-            onValueChange={(value: 'stdio' | 'sse') => onChange({ type: value })}
-            className="flex gap-4"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="stdio" id="stdio" />
-              <Label htmlFor="stdio" className="cursor-pointer">
-                {t.mcp.stdioType}
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="sse" id="sse" />
-              <Label htmlFor="sse" className="cursor-pointer">
-                {t.mcp.sseType}
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
-      </>
-    );
-  }
-);
+      <div className="space-y-2">
+        <Label className="flex items-center">
+          <span className="text-red-500 mr-1">*</span>
+          {t.mcp.type}
+        </Label>
+        <RadioGroup
+          value={server.type}
+          onValueChange={(value: 'stdio' | 'sse') => onChange({ type: value })}
+          className="flex gap-4"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="stdio" id="stdio" />
+            <Label htmlFor="stdio" className="cursor-pointer">
+              {t.mcp.stdioType}
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="sse" id="sse" />
+            <Label htmlFor="sse" className="cursor-pointer">
+              {t.mcp.sseType}
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+    </>
+  );
+};
 
 // STDIO 配置表单组件
-const StdioConfigForm = memo(
-  ({
-    server,
-    onChange,
-    disabled,
-  }: {
-    server: MCPServer;
-    onChange: (updates: Partial<MCPServer>) => void;
-    disabled: boolean;
-  }) => {
-    const { t } = useLanguage();
+const StdioConfigForm = ({
+  server,
+  onChange,
+  disabled,
+}: {
+  server: MCPServer;
+  onChange: (updates: Partial<MCPServer>) => void;
+  disabled: boolean;
+}) => {
+  const { t } = useLanguage();
 
-    const handleEnvChange = (text: string) => {
-      const envLines = text.split('\n').filter(line => line.trim() !== '');
-      const envObj: Record<string, string> = {};
+  // 将状态初始化移到组件顶部
+  const [mcpArgs, setMcpArgs] = useState('');
+  const [mcpEnv, setMcpEnv] = useState('');
+  const [mcpCommand, setMcpCommand] = useState('');
 
-      envLines.forEach(line => {
+  // 环境变量转换函数
+  const envToStr = useCallback((env: Record<string, string> | undefined) => {
+    if (env && Object.keys(env).length > 0) {
+      return Object.entries(env)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('\n');
+    }
+    return '';
+  }, []);
+
+  // 统一的初始化 effect
+  useEffect(() => {
+    setMcpCommand(server.command || '');
+    setMcpArgs(server.args?.join('\n') || '');
+    setMcpEnv(server.env ? envToStr(server.env) : '');
+  }, [server.command, server.args, server.env, envToStr]);
+
+  // 处理参数变化
+  const handleArgsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    setMcpArgs(text);
+    const args = text.split('\n').filter(line => line.trim() !== '');
+    onChange({ args });
+  };
+
+  // 处理环境变量变化
+  const handleEnvChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    setMcpEnv(text);
+
+    const envObj: Record<string, string> = {};
+    text
+      .split('\n')
+      .filter(line => line.trim() !== '')
+      .forEach(line => {
         const parts = line.split('=');
         if (parts.length >= 2) {
           const key = parts[0].trim();
@@ -127,68 +159,63 @@ const StdioConfigForm = memo(
           }
         }
       });
+    onChange({ env: envObj });
+  };
 
-      onChange({ env: envObj });
-    };
+  // 处理命令变化
+  const handleCommandChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const text = e.target.value;
+    setMcpCommand(text);
+    onChange({ command: text });
+  };
 
-    return (
-      <>
-        <div className="space-y-1">
-          <Label htmlFor="mcpCommand" className="text-xs flex items-center">
-            <span className="text-red-500 mr-1">*</span>
-            {t.mcp.command}
-          </Label>
-          <Input
-            id="mcpCommand"
-            className="h-8 text-xs"
-            value={server.command || ''}
-            onChange={e => onChange({ command: e.target.value })}
-            placeholder="uvx or npx"
-            disabled={disabled}
-          />
-        </div>
+  return (
+    <>
+      <div className="space-y-1">
+        <Label htmlFor="mcpCommand" className="text-xs flex items-center">
+          <span className="text-red-500 mr-1">*</span>
+          {t.mcp.command}
+        </Label>
+        <Input
+          id="mcpCommand"
+          className="h-8 text-xs"
+          value={mcpCommand}
+          onChange={handleCommandChange}
+          placeholder="uvx or npx"
+          disabled={disabled}
+        />
+      </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="mcpArgs" className="text-xs">
-            {t.mcp.arguments}
-          </Label>
-          <Textarea
-            id="mcpArgs"
-            className="h-20 text-xs"
-            value={server.args?.join('\n') || ''}
-            onChange={e =>
-              onChange({
-                args: e.target.value.split('\n').filter(line => line.trim() !== ''),
-              })
-            }
-            placeholder="arg1&#10;arg2"
-            disabled={disabled}
-          />
-        </div>
+      <div className="space-y-1">
+        <Label htmlFor="mcpArgs" className="text-xs">
+          {t.mcp.arguments}
+        </Label>
+        <Textarea
+          id="mcpArgs"
+          className="h-20 text-xs"
+          value={mcpArgs}
+          onChange={handleArgsChange}
+          placeholder="arg1&#10;arg2"
+          disabled={disabled}
+        />
+      </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="mcpEnv" className="text-xs">
-            {t.mcp.environment}
-          </Label>
-          <Textarea
-            id="mcpEnv"
-            className="h-20 text-xs"
-            value={
-              server.env && Object.keys(server.env).length > 0
-                ? Object.entries(server.env)
-                    .map(([key, value]) => `${key}=${value}`)
-                    .join('\n')
-                : ''
-            }
-            onChange={e => handleEnvChange(e.target.value)}
-            placeholder="KEY1=value1&#10;KEY2=value2"
-            disabled={disabled}
-          />
-        </div>
-      </>
-    );
-  }
-);
+      <div className="space-y-1">
+        <Label htmlFor="mcpEnv" className="text-xs">
+          {t.mcp.environment}
+        </Label>
+        <Textarea
+          id="mcpEnv"
+          className="h-20 text-xs"
+          value={mcpEnv}
+          onChange={handleEnvChange}
+          placeholder="KEY1=value1&#10;KEY2=value2"
+          disabled={disabled}
+        />
+      </div>
+    </>
+  );
+};
 
 // SSE 配置表单组件
 const SSEConfigForm = memo(
@@ -262,74 +289,25 @@ const DeleteConfirmDialog = memo(
   }
 );
 
-// 状态提示组件
-const StatusAlert = memo(
-  ({
-    error,
-    isConnected,
-    connectionStatus,
-    serverType,
-  }: {
-    error: string;
-    isConnected: boolean;
-    connectionStatus: string;
-    serverType: 'stdio' | 'sse';
-  }) => {
-    const { t } = useLanguage();
-
-    if (error) {
-      return (
-        <Alert variant="destructive" className="py-2 text-xs">
-          <ExclamationTriangleIcon className="h-3 w-3" />
-          <AlertTitle className="text-xs font-medium">{t.mcp.error}</AlertTitle>
-          <AlertDescription className="text-xs">{error}</AlertDescription>
-        </Alert>
-      );
-    }
-
-    if (isConnected && serverType === 'sse') {
-      return (
-        <Alert className="py-2 text-xs">
-          <CheckCircledIcon className="h-3 w-3" />
-          <AlertTitle className="text-xs font-medium">{t.mcp.connected}</AlertTitle>
-          <AlertDescription className="text-xs">
-            {connectionStatus || t.mcp.connectedDescription}
-          </AlertDescription>
-        </Alert>
-      );
-    }
-
-    return null;
-  }
-);
-
 // 设置组件名称
 BasicInfoForm.displayName = 'BasicInfoForm';
 StdioConfigForm.displayName = 'StdioConfigForm';
 SSEConfigForm.displayName = 'SSEConfigForm';
 DeleteConfirmDialog.displayName = 'DeleteConfirmDialog';
-StatusAlert.displayName = 'StatusAlert';
 
-const MCPServerDetail = memo(({ server, onSave, onDelete, onTest }: MCPServerDetailProps) => {
+const MCPServerDetail = ({ server, onSave, onDelete, onTest }: MCPServerDetailProps) => {
   const { t } = useLanguage();
-  const [editedServer, setEditedServer] = useState<MCPServer | null>(null);
+  const { toast } = useToast();
+  const [editedServer, setEditedServer] = useState<MCPServer | null>(server);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (server) {
       setEditedServer({ ...server });
-      setIsConnected(server.isConnected || false);
-      setConnectionStatus(server.connectionStatus || '');
     } else {
       setEditedServer(null);
-      setIsConnected(false);
-      setConnectionStatus('');
     }
-    setError('');
   }, [server]);
 
   if (!editedServer) {
@@ -348,30 +326,29 @@ const MCPServerDetail = memo(({ server, onSave, onDelete, onTest }: MCPServerDet
     if (!editedServer) return;
 
     setIsLoading(true);
-    setError('');
 
     try {
       await onSave(editedServer);
     } catch (error: any) {
-      setError(error.message || t.mcp.error);
+      toast({
+        title: t.mcp.error,
+        description: error.message || t.mcp.error,
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleTest = async () => {
-    if (!editedServer) return;
+    if (!editedServer) return false;
 
     setIsLoading(true);
-    setError('');
 
     try {
-      await onTest(editedServer);
-      setIsConnected(true);
-      setConnectionStatus(t.mcp.testSuccess);
-    } catch (error: any) {
-      setError(error.message || t.mcp.testFailed);
-      setIsConnected(false);
+      // 只进行测试，不自动保存
+      const success = await onTest(editedServer);
+      return success;
     } finally {
       setIsLoading(false);
     }
@@ -384,7 +361,11 @@ const MCPServerDetail = memo(({ server, onSave, onDelete, onTest }: MCPServerDet
     try {
       await onDelete(String(editedServer.id));
     } catch (error: any) {
-      setError(error.message || t.mcp.error);
+      toast({
+        title: t.mcp.error,
+        description: error.message || t.mcp.error,
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -392,10 +373,6 @@ const MCPServerDetail = memo(({ server, onSave, onDelete, onTest }: MCPServerDet
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center mb-4">
-        <h3 className="font-medium flex-1">{editedServer.name}</h3>
-      </div>
-
       <DeleteConfirmDialog
         isOpen={showDeleteConfirm}
         serverName={editedServer.name}
@@ -442,43 +419,36 @@ const MCPServerDetail = memo(({ server, onSave, onDelete, onTest }: MCPServerDet
           )}
 
           <div className="flex justify-between">
-            {editedServer.type === 'sse' && (
-              <Button
-                onClick={handleTest}
-                disabled={isLoading || !editedServer.url || !editedServer.name}
-                className="h-8 text-xs px-4"
-                variant="outline"
-              >
-                {isLoading ? t.common.loading : t.mcp.test}
-              </Button>
-            )}
+            <Button
+              onClick={handleTest}
+              disabled={
+                isLoading ||
+                (editedServer.type === 'stdio' ? !editedServer.command : !editedServer.url) ||
+                !editedServer.name
+              }
+              className="h-8 text-xs px-4"
+              variant="outline"
+            >
+              {isLoading ? t.common.loading : t.mcp.test}
+            </Button>
 
-            <div className={editedServer.type === 'sse' ? '' : 'ml-auto'}>
-              <Button
-                onClick={handleSave}
-                disabled={
-                  isLoading ||
-                  (editedServer.type === 'stdio' ? !editedServer.command : !editedServer.url) ||
-                  !editedServer.name
-                }
-                className="h-8 text-xs px-4"
-              >
-                {isLoading ? t.common.saving : t.common.save}
-              </Button>
-            </div>
+            <Button
+              onClick={handleSave}
+              disabled={
+                isLoading ||
+                (editedServer.type === 'stdio' ? !editedServer.command : !editedServer.url) ||
+                !editedServer.name
+              }
+              className="h-8 text-xs px-4"
+            >
+              {isLoading ? t.common.saving : t.common.save}
+            </Button>
           </div>
-
-          <StatusAlert
-            error={error}
-            isConnected={isConnected}
-            connectionStatus={connectionStatus}
-            serverType={editedServer.type}
-          />
         </CompactCardContent>
       </CompactCard>
     </div>
   );
-});
+};
 
 MCPServerDetail.displayName = 'MCPServerDetail';
 

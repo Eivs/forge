@@ -3,7 +3,6 @@ import { useLanguage } from '../../locales';
 import MCPServerList from './MCPServerList';
 import MCPServerDetail from './MCPServerDetail';
 import { useToast } from '../ui/use-toast';
-import { Button } from '../ui/button';
 
 // MCP 服务器类型定义
 export interface MCPServer {
@@ -25,8 +24,6 @@ const MCPSettings = () => {
   const { toast } = useToast();
   const [servers, setServers] = useState<MCPServer[]>([]);
   const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
-  const [isTestingMCP, setIsTestingMCP] = useState(false);
-  const [testResult, setTestResult] = useState<any>(null);
 
   useEffect(() => {
     const loadMCPServers = async () => {
@@ -40,43 +37,9 @@ const MCPSettings = () => {
             args: server.args ? JSON.parse(server.args) : [],
             env: server.env ? JSON.parse(server.env) : {},
           }));
-
           setServers(processedServers);
-
           // 选择第一个服务器
           setSelectedServerId(String(processedServers[0].id));
-
-          // 初始化 MCP 客户端
-          const initResult = await window.electron.mcp.initialize();
-          if (initResult.success) {
-            // 检查连接状态
-            const connected = await window.electron.mcp.isConnected();
-            if (connected) {
-              const status = await window.electron.mcp.getConnectionStatus();
-              // 更新所有已启用的服务器的连接状态
-              setServers(prev =>
-                prev.map(server =>
-                  server.isEnabled
-                    ? { ...server, isConnected: connected, connectionStatus: status }
-                    : server
-                )
-              );
-
-              // 显示成功提示
-              toast({
-                title: t.mcp.initSuccess,
-                description: t.mcp.initSuccessDesc,
-                variant: 'default',
-              });
-            }
-          } else if (initResult.message) {
-            // 显示错误提示
-            toast({
-              title: t.mcp.initFailed,
-              description: initResult.message,
-              variant: 'destructive',
-            });
-          }
         }
       } catch (error) {
         console.error('Error loading MCP servers:', error);
@@ -87,12 +50,22 @@ const MCPSettings = () => {
         });
       }
     };
-
     loadMCPServers();
   }, [t, toast]);
 
   const handleSaveServer = async (server: MCPServer) => {
     try {
+      // 先测试连接
+      const isConnected = await handleTestServer(server);
+      if (!isConnected) {
+        toast({
+          title: t.mcp.testFailed,
+          description: t.mcp.testFailedDesc || t.mcp.testFailed,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const serverData = {
         ...server,
         args: Array.isArray(server.args) ? server.args : [],
@@ -108,6 +81,7 @@ const MCPSettings = () => {
         // Update existing server
         savedServer = await window.electron.mcpServers.update(Number(server.id), serverData);
       }
+      console.log(savedServer);
 
       // 更新服务器列表
       const allServers = await window.electron.mcpServers.getAll();
@@ -180,6 +154,11 @@ const MCPSettings = () => {
       }
     } catch (error) {
       console.error('Error saving MCP server:', error);
+      toast({
+        title: t.mcp.error,
+        description: String(error),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -212,70 +191,46 @@ const MCPSettings = () => {
     }
   };
 
-  const handleTestServer = async (server: MCPServer) => {
+  const handleTestServer = async (server: MCPServer): Promise<boolean> => {
     try {
-      if (server.type === 'sse') {
-        // 对于 SSE 类型，测试 URL 连接
-        if (server.url) {
-          await window.electron.mcp.connect(server.url);
-          const status = await window.electron.mcp.getConnectionStatus();
+      // 检查是否为临时服务器（未保存到数据库）
+      const isTemporaryServer = typeof server.id === 'string' && server.id.startsWith('temp-');
 
-          // 更新服务器连接状态
-          await window.electron.mcpServers.update(Number(server.id), {
-            isConnected: true,
-            connectionStatus: status,
-          });
+      // 使用新的 testConnect 方法测试连接
+      // @ts-expect-error - 忽略 TypeScript 类型检查
+      const testResult = await window.electron.mcp.testConnect(server);
 
-          // 重新加载服务器列表
-          const updatedServers = await window.electron.mcpServers.getAll();
-          const processedUpdatedServers = updatedServers.map((s: any) => ({
-            ...s,
-            args: s.args ? JSON.parse(s.args) : [],
-            env: s.env ? JSON.parse(s.env) : {},
-          }));
-
-          setServers(processedUpdatedServers);
-        }
-      } else {
-        // 对于 stdio 类型，测试命令执行
-        if (server.command) {
-          // 这里需要实现 stdio 类型的测试逻辑
-          // 目前只是模拟测试成功
-          await window.electron.mcpServers.update(Number(server.id), {
-            isConnected: true,
-            connectionStatus: 'Test successful',
-          });
-
-          // 重新加载服务器列表
-          const updatedServers = await window.electron.mcpServers.getAll();
-          const processedUpdatedServers = updatedServers.map((s: any) => ({
-            ...s,
-            args: s.args ? JSON.parse(s.args) : [],
-            env: s.env ? JSON.parse(s.env) : {},
-          }));
-
-          setServers(processedUpdatedServers);
-        }
+      if (!testResult.success) {
+        throw new Error(testResult.error || t.mcp.testFailedDesc || t.mcp.testFailed);
       }
-    } catch (error) {
-      console.error('Error testing MCP server:', error);
-      // 更新服务器连接状态
-      if (server.id) {
+
+      // 只有已保存的服务器才更新数据库
+      if (!isTemporaryServer) {
+        // 更新服务器连接状态
         await window.electron.mcpServers.update(Number(server.id), {
-          isConnected: false,
-          connectionStatus: '',
+          isConnected: true,
+          connectionStatus: testResult.status || 'Connected',
         });
-
-        // 重新加载服务器列表
-        const updatedServers = await window.electron.mcpServers.getAll();
-        const processedUpdatedServers = updatedServers.map((s: any) => ({
-          ...s,
-          args: s.args ? JSON.parse(s.args) : [],
-          env: s.env ? JSON.parse(s.env) : {},
-        }));
-
-        setServers(processedUpdatedServers);
       }
+
+      // 对于临时服务器，不更新服务器列表状态
+      // 移除 setServers 调用，避免触发重新渲染
+
+      toast({
+        title: t.mcp.testSuccess,
+        description: t.mcp.testSuccessDesc || t.mcp.testSuccess,
+        variant: 'default',
+      });
+
+      return true;
+    } catch (error: any) {
+      console.error('Error testing MCP server:', error);
+      toast({
+        title: t.mcp.testFailed,
+        description: error.message || t.mcp.testFailedDesc || t.mcp.testFailed,
+        variant: 'destructive',
+      });
+      return false;
     }
   };
 
@@ -317,7 +272,6 @@ const MCPSettings = () => {
       url: '',
       description: '',
     };
-
     // 添加到列表并选中
     setServers([...servers, newServer]);
     setSelectedServerId(tempId);
@@ -327,78 +281,11 @@ const MCPSettings = () => {
     setSelectedServerId(serverId);
   };
 
-  // 测试 MCP 集成
-  const handleTestMCPIntegration = async () => {
-    try {
-      setIsTestingMCP(true);
-      setTestResult(null);
-
-      // 调用测试函数
-      const result = await window.electron.mcp.test();
-      console.log('MCP integration test result:', result);
-
-      setTestResult(result);
-
-      // 显示测试结果提示
-      if (result.success) {
-        toast({
-          title: 'MCP 集成测试成功',
-          description: '成功调用 MCP 工具并获取响应',
-          variant: 'default',
-        });
-      } else {
-        toast({
-          title: 'MCP 集成测试失败',
-          description: result.error ? String(result.error) : '未知错误',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error testing MCP integration:', error);
-      setTestResult({ success: false, error });
-
-      toast({
-        title: 'MCP 集成测试失败',
-        description: String(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsTestingMCP(false);
-    }
-  };
-
   return (
     <div className="flex flex-col h-full border-t">
       <div className="p-3 border-b flex justify-between items-center">
         <h3 className="text-lg font-medium">{t.mcp.serverConfig}</h3>
-        <Button
-          onClick={handleTestMCPIntegration}
-          disabled={isTestingMCP || !servers.some(s => s.isEnabled && s.isConnected)}
-          variant="outline"
-          size="sm"
-        >
-          {isTestingMCP ? t.common.loading : 'Test MCP Integration'}
-        </Button>
       </div>
-
-      {testResult && (
-        <div className="p-3 border-b">
-          <div className={`p-3 rounded-md ${testResult.success ? 'bg-green-50 dark:bg-green-950' : 'bg-red-50 dark:bg-red-950'}`}>
-            <h4 className="font-medium mb-2">{testResult.success ? 'MCP 集成测试成功' : 'MCP 集成测试失败'}</h4>
-            {testResult.success && testResult.assistantMessage && (
-              <div className="text-sm">
-                <p className="font-medium mb-1">助手回复:</p>
-                <p className="whitespace-pre-wrap">{testResult.assistantMessage}</p>
-              </div>
-            )}
-            {!testResult.success && testResult.error && (
-              <div className="text-sm text-red-600 dark:text-red-400">
-                <p>{String(testResult.error)}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       <div className="flex flex-1 overflow-hidden">
         <div className="w-1/4 border-r h-full overflow-y-auto">

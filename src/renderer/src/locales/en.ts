@@ -15,7 +15,8 @@ export default {
     welcomeMessage: 'Select a chat from the sidebar or create a new one to get started',
     noChatsYet: 'No chats yet',
     deleteConfirmation: 'Delete Confirmation',
-    deleteConfirmationDescription: 'Are you sure you want to delete "{name}"? This action cannot be undone.',
+    deleteConfirmationDescription:
+      'Are you sure you want to delete "{name}"? This action cannot be undone.',
   },
   chat: {
     newChat: 'New Chat',
@@ -111,12 +112,17 @@ export default {
     selectServer: 'Select a server',
     test: 'Test Connection',
     testSuccess: 'Connection test successful',
+    testSuccessDesc: 'Successfully connected to MCP server',
     testFailed: 'Connection test failed',
+    testFailedDesc: 'Unable to connect to MCP server',
     back: 'Back',
     saveSuccess: 'saved successfully',
     initSuccess: 'MCP Initialized',
     initSuccessDesc: 'MCP client initialized successfully',
     initFailed: 'MCP Initialization Failed',
+    integrationTestSuccess: 'MCP Integration Test Successful',
+    integrationTestSuccessDesc: 'Successfully called MCP tools and received response',
+    integrationTestFailed: 'MCP Integration Test Failed',
   },
   errors: {
     title: 'Error',

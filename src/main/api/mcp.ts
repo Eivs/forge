@@ -1,11 +1,11 @@
 import { ipcMain, IpcMainInvokeEvent } from 'electron';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { MultiServerMCPClient, loadMcpTools } from '@langchain/mcp-adapters';
 import { getDatabase } from '../database';
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
-import testMCPIntegration from './mcpTest';
 
 // 全局 MCP 客户端实例
 let multiServerClient: MultiServerMCPClient | null = null;
@@ -13,21 +13,67 @@ let sseClient: Client | null = null;
 let connectionStatus: 'connected' | 'disconnected' | 'error' = 'disconnected';
 let mcpTools: any[] = [];
 
-// 获取系统 Node.js 路径
-function getNodePath() {
+/**
+ * 获取系统中的可执行文件路径
+ * @param command 要查找的命令
+ * @param defaultPath 如果找不到命令时的默认路径
+ * @returns 命令的完整路径
+ */
+function getExecutablePath(command: string, defaultPath?: string): string {
   try {
-    // 尝试使用 which 命令获取 node 路径
-    const nodePath = execSync('which node').toString().trim();
-    if (nodePath && existsSync(nodePath)) {
-      console.log(`Found Node.js path: ${nodePath}`);
-      return nodePath;
+    // 尝试使用 which 命令获取路径
+    const path = execSync(`which ${command}`).toString().trim();
+    if (path && existsSync(path)) {
+      console.log(`Found ${command} path: ${path}`);
+      return path;
     }
   } catch (error) {
-    console.warn('Could not determine Node.js path using which command:', error);
+    console.warn(`Could not determine ${command} path using which command:`, error);
   }
 
-  console.warn('Could not find Node.js path, using default "node"');
-  return process.execPath;
+  if (command === 'node' && !defaultPath) {
+    console.warn('Could not find Node.js path, using process.execPath');
+    return process.execPath;
+  }
+
+  console.warn(`Could not find ${command} path, using default "${defaultPath || command}"`);
+  return defaultPath || command;
+}
+
+/**
+ * 获取 Node.js 路径
+ * @returns Node.js 的完整路径
+ */
+function getNodePath(): string {
+  return getExecutablePath('node');
+}
+
+/**
+ * 准备执行环境变量
+ * @param env 原始环境变量对象
+ * @returns 增强后的环境变量对象
+ */
+function prepareEnvironment(env: Record<string, string> = {}): Record<string, string> {
+  const enhancedEnv = { ...env };
+
+  // 获取 Node.js 路径
+  const nodePath = getNodePath();
+
+  // 确保 PATH 环境变量包含 Node.js 路径
+  const nodeBinDir = nodePath.substring(0, nodePath.lastIndexOf('/'));
+  enhancedEnv.PATH = process.env.PATH ? `${nodeBinDir}:${process.env.PATH}` : nodeBinDir;
+
+  // 添加 NODE_PATH 环境变量
+  if (!enhancedEnv.NODE_PATH) {
+    enhancedEnv.NODE_PATH = process.env.NODE_PATH || nodePath;
+  }
+
+  // 添加 SHELL 环境变量以确保 sh 命令可用
+  if (!enhancedEnv.SHELL) {
+    enhancedEnv.SHELL = process.env.SHELL || '/bin/sh';
+  }
+
+  return enhancedEnv;
 }
 
 // 初始化 MCP 客户端
@@ -46,8 +92,7 @@ async function initializeMultiServerClient() {
       return null;
     }
 
-    // 获取 Node.js 路径
-    const nodePath = getNodePath();
+    // 初始化配置
 
     // 构建 MultiServerMCPClient 配置
     const mcpConfig: any = {
@@ -63,11 +108,36 @@ async function initializeMultiServerClient() {
       const serverName = server.name.replace(/\s+/g, '_').toLowerCase();
 
       if (server.type === 'stdio' && server.command) {
-        // 构建基本配置
-        const serverConfig: any = {
+        // 解析参数和环境变量
+        let args = [];
+        let env = {};
+
+        try {
+          args = server.args ? JSON.parse(server.args) : [];
+        } catch (error) {
+          console.error(`Error parsing args for server ${serverName}:`, error);
+        }
+
+        try {
+          env = server.env ? JSON.parse(server.env) : {};
+        } catch (error) {
+          console.error(`Error parsing env for server ${serverName}:`, error);
+        }
+
+        // 准备环境变量
+        const enhancedEnv = prepareEnvironment(env);
+
+        // 如果命令是 npx 或 uvx，确保使用完整路径
+        const finalCommand = ['npx', 'uvx'].includes(server.command)
+          ? getExecutablePath(server.command, server.command)
+          : server.command;
+
+        // 构建服务器配置
+        const serverConfig = {
           transport: 'stdio',
-          command: server.command,
-          args: server.args ? JSON.parse(server.args) : [],
+          command: finalCommand,
+          args,
+          env: enhancedEnv,
           restart: {
             enabled: true,
             maxAttempts: 3,
@@ -75,41 +145,6 @@ async function initializeMultiServerClient() {
           },
         };
 
-        // 添加环境变量
-        let env: Record<string, string> = {};
-        if (server.env) {
-          try {
-            env = JSON.parse(server.env);
-          } catch (error) {
-            console.error(`Error parsing env for server ${serverName}:`, error);
-          }
-        }
-
-        // 确保 PATH 环境变量包含 Node.js 路径
-        const nodeBinDir = nodePath.substring(0, nodePath.lastIndexOf('/'));
-        env.PATH = env.PATH ? `${nodeBinDir}:${env.PATH}` : nodeBinDir;
-
-        // 添加 NODE_PATH 环境变量
-        if (!env.NODE_PATH) {
-          env.NODE_PATH = process.env.NODE_PATH || nodePath;
-        }
-
-        // 添加 SHELL 环境变量以确保 sh 命令可用
-        if (!env.SHELL) {
-          env.SHELL = process.env.SHELL || '/bin/sh';
-        }
-
-        // 如果命令是 npx 或 uvx，确保使用完整路径
-        if (server.command === 'npx' || server.command === 'uvx') {
-          const npmBinPath = execSync('which ' + server.command)
-            .toString()
-            .trim();
-          if (npmBinPath) {
-            serverConfig.command = npmBinPath;
-          }
-        }
-
-        serverConfig.env = env;
         mcpConfig.mcpServers[serverName] = serverConfig;
 
         console.log(`Configured stdio server ${serverName}:`, {
@@ -158,15 +193,150 @@ async function initializeMultiServerClient() {
   }
 }
 
+// /**
+//  * 测试 MCP 集成
+//  * @returns 测试结果
+//  */
+// async function testMCPIntegration() {
+//   try {
+//     // 检查是否已连接
+//     if (!sseClient && !multiServerClient) {
+//       throw new Error('MCP client not connected');
+//     }
+
+//     // 获取工具列表
+//     const tools =
+//       mcpTools.length > 0 ? mcpTools : multiServerClient ? await multiServerClient.getTools() : [];
+
+//     if (tools.length === 0) {
+//       throw new Error('No MCP tools available');
+//     }
+
+//     return {
+//       success: true,
+//       toolCount: tools.length,
+//       tools: tools.map(t => t.name),
+//     };
+//   } catch (error: any) {
+//     console.error('MCP integration test failed:', error);
+//     return {
+//       success: false,
+//       error: error.message || 'Unknown error',
+//     };
+//   }
+// }
+
 export function setupMCPHandlers() {
-  // 测试 MCP 集成
-  ipcMain.handle('mcp:test', async () => {
+  // 测试 MCP 连接
+  ipcMain.handle('mcp:testConnect', async (_: IpcMainInvokeEvent, serverConfig: any) => {
     try {
-      const result = await testMCPIntegration();
-      return result;
+      // 检查服务器类型
+      const serverType = serverConfig.type;
+
+      if (serverType === 'sse') {
+        // SSE 模式测试
+        const url = serverConfig.url;
+        if (!url) {
+          throw new Error('URL is required for SSE server');
+        }
+
+        console.log(`Testing connection to SSE MCP server at ${url}`);
+
+        // 创建临时 SSE 客户端进行测试
+        const transport = new SSEClientTransport(new URL(url));
+
+        // 初始化客户端
+        const testClient = new Client({
+          name: 'forge-ai-assistant-test',
+          version: '1.0.0',
+        });
+
+        // 连接到服务器
+        await testClient.connect(transport);
+        const mcpServer = (await testClient.listTools()) || [];
+
+        // 如果成功连接，关闭测试客户端
+        await testClient.close();
+
+        return {
+          success: true,
+          status: 'SSE connection successful',
+          tools: mcpServer.tools,
+        };
+      } else if (serverType === 'stdio') {
+        // stdio 模式测试
+        const command = serverConfig.command;
+        if (!command) {
+          throw new Error('Command is required for stdio server');
+        }
+
+        console.log(`Testing connection to stdio MCP server with command: ${command}`);
+
+        // 解析参数和环境变量
+        const args = Array.isArray(serverConfig.args) ? serverConfig.args : [];
+        const env = prepareEnvironment(
+          typeof serverConfig.env === 'object' ? serverConfig.env : {}
+        );
+
+        // 如果命令是 npx 或 uvx，确保使用完整路径
+        const finalCommand = ['npx', 'uvx'].includes(command)
+          ? getExecutablePath(command, command)
+          : command;
+
+        // 创建 StdioClientTransport 进行测试
+        console.log(
+          'Testing stdio server with command:',
+          finalCommand,
+          '\nargs:',
+          args,
+          '\nenv:',
+          env
+        );
+
+        // 创建客户端并测试连接
+        const transport = new StdioClientTransport({
+          command: finalCommand,
+          args,
+          env,
+        });
+
+        // 初始化客户端
+        const testClient = new Client({
+          name: 'forge-ai-assistant-test',
+          version: '1.0.0',
+        });
+
+        try {
+          // 连接到服务器
+          await testClient.connect(transport);
+          const mcpServer = (await testClient.listTools()) || [];
+
+          // 如果成功连接，关闭测试客户端
+          await testClient.close();
+
+          return {
+            success: true,
+            status: 'stdio connection successful',
+            tools: mcpServer.tools,
+          };
+        } catch (error) {
+          // 确保关闭客户端
+          try {
+            await testClient.close();
+          } catch (closeError) {
+            console.warn('Error closing test client:', closeError);
+          }
+          throw error;
+        }
+      } else {
+        throw new Error(`Unsupported server type: ${serverType}`);
+      }
     } catch (error: any) {
-      console.error('Error testing MCP integration:', error);
-      return { success: false, error: error.message };
+      console.error('Error testing connection to MCP server:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to connect to MCP server',
+      };
     }
   });
 

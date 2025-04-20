@@ -47,7 +47,7 @@ const createWindow = () => {
   // 加载应用的 index.html。
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:5173');
-    // mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
   } else {
     // 在生产环境中，加载构建好的 html 文件
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
