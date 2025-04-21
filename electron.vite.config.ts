@@ -1,12 +1,10 @@
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
-import * as react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
-    root: 'src/main',
     resolve: {
       alias: {
         '@shared': resolve('src/shared'),
@@ -15,9 +13,11 @@ export default defineConfig({
         '@': resolve('src/preload'),
       },
     },
+    build: {
+      outDir: resolve('dist/main'),
+    },
   },
   preload: {
-    root: 'src/preload',
     plugins: [externalizeDepsPlugin()],
     resolve: {
       alias: {
@@ -26,9 +26,11 @@ export default defineConfig({
         '@shared': resolve('src/shared'),
       },
     },
+    build: {
+      outDir: resolve('dist/preload'),
+    },
   },
   renderer: {
-    root: 'src/renderer',
     assetsInclude: 'src/renderer/assets',
     resolve: {
       alias: {
@@ -41,6 +43,9 @@ export default defineConfig({
         '@/locales': resolve('src/renderer/src/locales'),
       },
     },
-    plugins: [react(), tailwindcss()],
+    plugins: [react()],
+    build: {
+      outDir: resolve('dist/renderer'),
+    },
   },
 });

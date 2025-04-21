@@ -1,7 +1,10 @@
+/* @tailwind base; */
+/* https://github.com/radix-ui/themes/issues/109#issuecomment-1747345743 */
+@import "tailwindcss/base";
+
 @import '@radix-ui/themes/styles.css';
 @import './fonts.css';
 
-@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -207,3 +210,5 @@
     box-shadow: 0 1px 3px var(--shadow);
   }
 }
+
+

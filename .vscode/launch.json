@@ -1,0 +1,52 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+      {"type":"node","request":"launch","name":"Run electron-vite","runtimeExecutable":"electron-vite","cwd":"${workspaceFolder}","args":[]},
+        {
+            "name": "Debug Main Process",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron-vite",
+            "runtimeArgs": ["dev", "--sourcemap","--remote-debugging-port=9229"],
+            "outFiles": [
+                "${workspaceFolder}/dist/main/**/*.js",
+                "${workspaceFolder}/dist/preload/**/*.js"
+            ],
+            "console": "integratedTerminal",
+            "sourceMaps": true,
+            "protocol": "inspector",
+            "env": {
+              "REMOTE_DEBUGGING_PORT": "9222",
+              "NODE_ENV": "development"
+            }
+        },
+        {
+            "name": "Debug Renderer Process",
+            "type": "chrome",
+            "port": 9222,
+            "request": "attach",
+            "webRoot": "${workspaceFolder}/src/renderer",
+            "timeout": 60000,
+            "url": "http://localhost:5173",
+            "sourceMapPathOverrides": {
+                "webpack:///./src/*": "${webRoot}/*"
+            },
+            "presentation": {
+              "hidden": true
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Debug All",
+            "configurations": ["Debug Main Process", "Debug Renderer Process"],
+            "presentation": {
+              "order": 1
+            }
+        }
+    ]
+}

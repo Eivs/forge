@@ -17,6 +17,8 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
+    autoHideMenuBar: true,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       nodeIntegration: false,
@@ -27,22 +29,28 @@ const createWindow = () => {
     },
   });
 
-  // 设置内容安全策略
-  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [
-          "default-src 'self';",
-          "script-src 'self';",
-          "style-src 'self' 'unsafe-inline';",
-          "img-src 'self' data: https:;",
-          "font-src 'self' data:;",
-          "connect-src 'self' https:;",
-        ].join(' '),
-      },
-    });
+  mainWindow.on('ready-to-show', () => {
+    if (!mainWindow) return;
+
+    mainWindow.show();
   });
+
+  // 设置内容安全策略
+  // mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+  //   callback({
+  //     responseHeaders: {
+  //       ...details.responseHeaders,
+  //       'Content-Security-Policy': [
+  //         "default-src 'self';",
+  //         "script-src 'self';",
+  //         "style-src 'self' 'unsafe-inline';",
+  //         "img-src 'self' data: https:;",
+  //         "font-src 'self' data:;",
+  //         "connect-src 'self' https:;",
+  //       ].join(' '),
+  //     },
+  //   });
+  // });
 
   // 加载应用的 index.html。
   if (process.env.NODE_ENV === 'development') {
