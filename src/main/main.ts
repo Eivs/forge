@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'path';
 import { initializeDatabase } from './database';
 import { setupAPIHandlers } from './api';
@@ -63,6 +63,11 @@ app.whenReady().then(async () => {
 
     // 设置 API 处理程序
     setupAPIHandlers();
+
+    // 处理打开外部链接
+    ipcMain.handle('shell:openExternal', (_, url) => {
+      shell.openExternal(url);
+    });
 
     // 创建窗口
     createWindow();

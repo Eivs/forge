@@ -2,7 +2,7 @@ import { useState, useRef, KeyboardEvent } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
-import { Send, StopCircle } from 'lucide-react';
+import { PaperPlaneIcon, StopIcon } from '@radix-ui/react-icons';
 import { useLanguage } from '../../locales';
 
 interface ChatInputProps {
@@ -42,7 +42,7 @@ const ChatInput = ({ chatId, isGenerating, onStopGeneration }: ChatInputProps) =
         value={message}
         onChange={e => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={t.chat.typeMessage || 'Type a message...'} // Fallback in case the key doesn't exist yet
+        placeholder={t.chat.typeMessage}
         className="min-h-[60px] resize-none chat-input flex-1 focus:ring-2 focus:ring-primary/20 transition-all"
         disabled={isGenerating}
       />
@@ -54,7 +54,11 @@ const ChatInput = ({ chatId, isGenerating, onStopGeneration }: ChatInputProps) =
         onClick={isGenerating ? onStopGeneration : handleSubmit}
         variant={isGenerating ? 'destructive' : 'default'}
       >
-        {isGenerating ? <StopCircle size={20} /> : <Send size={20} />}
+        {isGenerating ? (
+          <StopIcon className="h-[20px] w-[20px]" />
+        ) : (
+          <PaperPlaneIcon className="h-[20px] w-[20px]" />
+        )}
       </Button>
     </div>
   );

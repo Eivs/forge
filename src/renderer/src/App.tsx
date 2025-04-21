@@ -5,6 +5,7 @@ import ChatWindow from './components/chat/ChatWindow';
 import { useThemeStore } from './store/themeStore';
 import { useChatStore } from './store/chatStore';
 import { LanguageProvider, useLanguage } from './locales';
+import { Toaster } from './components/ui/toaster';
 
 // 欢迎屏幕组件
 const WelcomeScreen = () => {
@@ -63,6 +64,7 @@ function App() {
           <Sidebar />
           {activeChat ? <ChatWindow /> : <WelcomeScreen />}
         </div>
+        <Toaster />
       </ThemeProvider>
     </LanguageProvider>
   );

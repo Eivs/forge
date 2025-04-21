@@ -2,8 +2,8 @@
 .idea/
 .vscode/
 dist/
+dist-electron/
 node_modules/
-build/
 tmp/
 temp/
 prisma/

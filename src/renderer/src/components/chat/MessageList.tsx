@@ -1,5 +1,5 @@
 import { Message } from '../../store/chatStore';
-import ReactMarkdown from 'react-markdown';
+import Markdown from '../ui/markdown';
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../../locales';
 import ErrorMessage from './ErrorMessage';
@@ -40,11 +40,10 @@ const MessageList = ({ messages, isGenerating }: MessageListProps) => {
   }
 
   return (
-    <div className="space-y-6 p-6 overflow-y-auto">
+    <div className="space-y-6 p-6">
       {messages.map((message, index) => {
         const isLastAssistantMessage =
           message.role === 'assistant' && index === messages.length - 1 && isGenerating;
-
         return (
           <div
             key={message.id}
@@ -58,9 +57,7 @@ const MessageList = ({ messages, isGenerating }: MessageListProps) => {
                 {message.content.includes('**ERROR_TITLE:**') ? (
                   <ErrorMessage content={message.content} />
                 ) : (
-                  <ReactMarkdown className="prose dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-card-muted prose-pre:text-sm prose-pre:p-4 prose-pre:rounded-md">
-                    {message.content}
-                  </ReactMarkdown>
+                  <Markdown>{message.content}</Markdown>
                 )}
                 {isLastAssistantMessage && message.content === '' && <LoadingDots />}
               </div>

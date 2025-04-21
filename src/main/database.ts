@@ -1,31 +1,38 @@
+import { getPrismaClient } from './lib/prisma';
 import { PrismaClient } from '@prisma/client';
-import { getPrismaClient } from './prisma';
-import fs from 'fs';
-import path from 'path';
-import { app } from 'electron';
 import { defaultProviders, defaultModels, defaultUser, defaultSettings } from './initialState';
+
+// import fs from 'fs';
+// import path from 'path';
+// import { app } from 'electron';
 
 export async function initializeDatabase() {
   try {
-    // 获取 SQLite 数据库的用户数据路径
-    const userDataPath = app.getPath('userData');
-    const dbPath = path.join(userDataPath, 'forge.sqlite');
-    const prismaDbPath = path.join(process.cwd(), 'prisma', 'forge.sqlite');
+    // // 获取 SQLite 数据库的用户数据路径
+    // const dbPath = path.join(app.getPath('userData'), 'forge.sqlite');
+    // const prismaDbPath = path.join(process.cwd(), 'prisma', 'forge.sqlite');
+    // // 检查数据库是否存在于用户数据目录中
+    // if (fs.existsSync(dbPath)) {
+    //   console.log('Existing database found, copying to Prisma directory');
+    //   const prismaDir = path.join(process.cwd(), 'prisma');
+    //   if (!fs.existsSync(prismaDir)) {
+    //     fs.mkdirSync(prismaDir, { recursive: true });
+    //   }
 
-    // 检查数据库是否存在于用户数据目录中
-    if (fs.existsSync(dbPath)) {
-      console.log('Existing database found, copying to Prisma directory');
-      // 如果 prisma 目录不存在，则创建它
-      const prismaDir = path.join(process.cwd(), 'prisma');
-      if (!fs.existsSync(prismaDir)) {
-        fs.mkdirSync(prismaDir, { recursive: true });
-      }
-
-      // 将数据库文件复制到 Prisma 目录
-      fs.copyFileSync(dbPath, prismaDbPath);
-    }
+    //   // 将数据库文件复制到 Prisma 目录
+    //   fs.copyFileSync(dbPath, prismaDbPath);
+    // }
 
     const prisma = getPrismaClient();
+
+    // 测试数据库连接
+    try {
+      await prisma.$connect();
+      console.log('Database connection successful');
+    } catch (error) {
+      console.error('Database connection error:', error);
+      throw new Error('Failed to connect to database');
+    }
 
     // 初始化默认提供商
     await initializeDefaultProviders(prisma);
@@ -143,7 +150,6 @@ async function initializeDefaultModels(prisma: PrismaClient) {
     console.log('Default models have been initialized');
   }
 }
-
 export function getDatabase() {
   return getPrismaClient();
 }

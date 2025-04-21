@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -24,6 +25,7 @@ model Chat {
   systemPrompt String?
   temperature  Float     @default(0.7)
   topP         Float     @default(1.0)
+  maxTokens    Int?      @default(4096)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime?
   user         User      @relation(fields: [userId], references: [id])
@@ -72,4 +74,34 @@ model Model {
   provider    Provider  @relation(fields: [providerId], references: [id])
   providerId  Int
   chats       Chat[]
+}
+
+model MCPServer {
+  id              Int       @id @default(autoincrement())
+  name            String
+  description     String?
+  type            String    // "stdio" or "sse"
+  command         String?
+  args            String?   // JSON string of arguments array
+  env             String?   // JSON string of environment variables
+  url             String?
+  isEnabled       Boolean   @default(true)
+  isAvailable     Boolean   @default(false)
+  isConnected     Boolean   @default(false)
+  connectionStatus String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  autoApprove     Boolean   @default(false)
+  tools           MCPServer[]
+}
+
+model MCPServer {
+  id              Int       @id @default(autoincrement())
+  mcpServerId     Int
+  name            String
+  description     String?
+  inPutSchema     String
+  outputSchema    String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
 }

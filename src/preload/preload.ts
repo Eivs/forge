@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electron', {
     update: (id: number, data: any) => ipcRenderer.invoke('chats:update', id, data),
     delete: (id: number) => ipcRenderer.invoke('chats:delete', id),
     rename: (id: number, title: string) => ipcRenderer.invoke('chats:rename', id, title),
+    clearMessages: (id: number) => ipcRenderer.invoke('chats:clearMessages', id),
   },
 
   // 消息相关 API
@@ -105,5 +106,21 @@ contextBridge.exposeInMainWorld('electron', {
     isConnected: () => ipcRenderer.invoke('mcp:isConnected'),
     getConnectionStatus: () => ipcRenderer.invoke('mcp:getConnectionStatus'),
     createMCPModel: (modelParams: any) => ipcRenderer.invoke('mcp:createMCPModel', modelParams),
+    initialize: () => ipcRenderer.invoke('mcp:initialize'),
+    testConnect: (serverConfig: any) => ipcRenderer.invoke('mcp:testConnect', serverConfig),
+  },
+
+  // MCP 服务器管理相关 API
+  mcpServers: {
+    getAll: () => ipcRenderer.invoke('mcpServers:getAll'),
+    getById: (id: number) => ipcRenderer.invoke('mcpServers:getById', id),
+    create: (data: any) => ipcRenderer.invoke('mcpServers:create', data),
+    update: (id: number, data: any) => ipcRenderer.invoke('mcpServers:update', id, data),
+    delete: (id: number) => ipcRenderer.invoke('mcpServers:delete', id),
+  },
+
+  // shell 相关 API
+  shell: {
+    openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
   },
 });

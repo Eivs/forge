@@ -41,8 +41,7 @@ Forge 是一个跨平台的桌面 AI 助手应用，支持多种 AI 模型、对
 - **React**: 前端框架
 - **Zustand**: 状态管理
 - **Tailwind CSS**: 实用优先的 CSS 框架
-- **Radix UI**: 无样式组件库
-- **Reachat**: 支持 Markdown 的聊天 UI 组件库
+- **Radix-UI**: UI 组件库
 - **LangChain**: 带流式传输支持的 LLM API 请求库
 - **Prisma**: 现代化 ORM 数据库交互工具
 
@@ -55,8 +54,7 @@ Forge 采用 Electron 构建，使用主进程/渲染进程架构，结合 React
 - Electron 渲染器进程处理前端逻辑
 - React 组件结构管理用户界面
 - Zustand 管理应用状态
-- Radix UI + Tailwind CSS 构建界面
-- Reachat 处理聊天界面和格式化
+- Radix-UI + Tailwind CSS 构建 UI 界面
 
 ### 后端
 
@@ -143,7 +141,7 @@ graph TB
     subgraph Frontend["Frontend Layer"]
         UI[React UI Components]
         State[Zustand State Management]
-        Chat[Reachat Chat Component]
+        Chat[Chat Component]
         UI <--> State
         State <--> Chat
     end
@@ -212,6 +210,27 @@ npm run build
 # 启动构建后的应用
 npm start
 ```
+
+### 发布应用
+
+Forge 使用 GitHub Actions 自动构建和发布应用程序。当创建一个新的 Git 标签（以 `v` 开头）并推送到 GitHub 时，将自动触发构建和发布流程。
+
+```bash
+# 更新 package.json 中的版本号
+
+# 提交更改
+git add .
+git commit -m "准备发布 v1.0.0"
+
+# 创建标签
+git tag v1.0.0
+
+# 推送标签
+git push origin main
+git push origin v1.0.0
+```
+
+详细的发布指南请参阅 [docs/release-guide.md](docs/release-guide.md)。
 
 ## 许可证
 

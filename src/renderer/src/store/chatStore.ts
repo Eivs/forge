@@ -14,6 +14,7 @@ export interface Chat {
   systemPrompt?: string;
   temperature: number;
   topP: number;
+  maxTokens?: number;
   model: Model;
   messages: Message[];
   createdAt: Date;
@@ -24,6 +25,7 @@ export interface Model {
   id: number;
   name: string;
   provider: Provider;
+  providerId?: number;
   contextSize: number;
   isActive: boolean;
 }
@@ -50,6 +52,7 @@ interface ChatState {
   updateChat: (id: number, data: ChatUpdateData) => Promise<Chat>;
   deleteChat: (id: number) => Promise<void>;
   renameChat: (id: number, title: string) => Promise<Chat>;
+  clearMessages: (id: number) => Promise<Chat>;
   addMessage: (chatId: number, message: Partial<Message>) => Promise<Message>;
   generateResponse: (chatId: number) => Promise<void>;
   abortGeneration: () => Promise<void>;
@@ -78,6 +81,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       const chats = await window.electron.chats.getAll();
       set({ chats });
+      if (!get().activeChat) {
+        set({ activeChat: chats[0] || null });
+      }
     } catch (error) {
       handleError(error, 'Error fetching chats:');
     }
@@ -136,6 +142,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
+  clearMessages: async id => {
+    try {
+      const updatedChat = await window.electron.chats.clearMessages(id);
+      set(state => ({
+        chats: state.chats.map(chat => (chat.id === id ? updatedChat : chat)),
+        activeChat: state.activeChat?.id === id ? updatedChat : state.activeChat,
+      }));
+      return updatedChat;
+    } catch (error) {
+      handleError(error, 'Error clearing chat messages:');
+    }
+  },
+
   addMessage: async (chatId, message) => {
     try {
       const newMessage = await window.electron.messages.create({
@@ -172,10 +191,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     try {
       const messages = activeChat.messages.map(({ role, content }) => ({ role, content }));
+      // 检查是否有 MCP 工具可用
+      const mcpStatus = await window.electron.mcp.isConnected();
+
       const modelParams = {
         modelId: activeChat.model.id,
         temperature: activeChat.temperature,
         topP: activeChat.topP,
+        maxTokens: activeChat.maxTokens,
+        useMCP: mcpStatus, // 如果 MCP 已连接，则使用 MCP 工具
       };
 
       tempMessage = await get().addMessage(chatId, {

@@ -4,7 +4,7 @@ import { useChatStore } from '../../store/chatStore';
 import { useModelStore } from '../../store/modelStore';
 import ChatList from './ChatList';
 import { Button } from '../ui/button';
-import { Settings, Plus, Sun, Moon, MonitorSmartphone } from 'lucide-react';
+import { GearIcon, PlusIcon, SunIcon, MoonIcon, LaptopIcon } from '@radix-ui/react-icons';
 
 import SettingsDialog from '../settings/SettingsDialog';
 import { useLanguage } from '../../locales';
@@ -50,7 +50,7 @@ const Sidebar = () => {
           disabled={!defaultModel}
           variant="default"
         >
-          <Plus size={18} />
+          <PlusIcon className="h-[18px] w-[18px]" />
           {t.chat.newChat}
         </Button>
       </div>
@@ -68,11 +68,11 @@ const Sidebar = () => {
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           {theme === 'light' ? (
-            <Moon size={20} />
+            <MoonIcon className="h-[20px] w-[20px]" />
           ) : theme === 'dark' ? (
-            <Sun size={20} />
+            <SunIcon className="h-[20px] w-[20px]" />
           ) : (
-            <MonitorSmartphone size={20} />
+            <LaptopIcon className="h-[20px] w-[20px]" />
           )}
         </Button>
 
@@ -83,7 +83,7 @@ const Sidebar = () => {
           onClick={() => setIsSettingsOpen(true)}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
-          <Settings size={20} />
+          <GearIcon className="h-[20px] w-[20px]" />
         </Button>
 
         <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />

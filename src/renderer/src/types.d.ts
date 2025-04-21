@@ -11,6 +11,7 @@ declare global {
         update: (id: number, data: any) => Promise<any>;
         delete: (id: number) => Promise<void>;
         rename: (id: number, title: string) => Promise<any>;
+        clearMessages: (id: number) => Promise<any>;
       };
 
       // 消息相关 API
@@ -63,6 +64,16 @@ declare global {
         isConnected: () => Promise<boolean>;
         getConnectionStatus: () => Promise<string>;
         createMCPModel: (modelParams: any) => Promise<{ success: boolean }>;
+        initialize: () => Promise<{ success: boolean; message?: string }>;
+      };
+
+      // MCP 服务器相关 API
+      mcpServers: {
+        getAll: () => Promise<any[]>;
+        getById: (id: number) => Promise<any>;
+        create: (data: any) => Promise<any>;
+        update: (id: number, data: any) => Promise<any>;
+        delete: (id: number) => Promise<void>;
       };
     };
   }

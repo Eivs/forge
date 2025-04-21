@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
-import { Trash } from 'lucide-react';
+import { TrashIcon, ChatBubbleIcon } from '@radix-ui/react-icons';
+
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import { useLanguage } from '../../locales';
@@ -47,13 +48,14 @@ const ChatList = () => {
           chats.map(chat => (
             <div
               key={chat.id}
-              className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all group ${
+              className={`flex items-center rounded-md border justify-between p-3 rounded-lg cursor-pointer transition-all group ${
                 activeChat?.id === chat.id
-                  ? 'bg-primary/10 border-l-4 border-primary shadow-sm'
-                  : 'hover:bg-accent hover:shadow-sm border-l-4 border-transparent'
+                  ? 'border-border bg-muted text-card-foreground'
+                  : 'hover:bg-accent text-muted-foreground border-transparent'
               }`}
               onClick={() => handleChatClick(chat.id)}
             >
+              <ChatBubbleIcon className="m-2" />
               <div className="truncate flex-1 font-medium">{chat.title}</div>
 
               <Button
@@ -63,7 +65,7 @@ const ChatList = () => {
                 className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 hover:opacity-100 hover:bg-destructive/10 transition-opacity"
                 title={t.common.delete}
               >
-                <Trash size={16} />
+                <TrashIcon className="h-[16px] w-[16px]" />
               </Button>
             </div>
           ))

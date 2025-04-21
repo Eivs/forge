@@ -42,7 +42,7 @@ const GeneralSettings = () => {
     <div className="space-y-3">
       <CompactCard>
         <CompactCardHeader>
-          <CompactCardTitle className="text-sm">{t.settings.theme}</CompactCardTitle>
+          <CompactCardTitle>{t.settings.theme}</CompactCardTitle>
         </CompactCardHeader>
         <CompactCardContent className="space-y-3">
           <div className="space-y-1">
@@ -62,7 +62,7 @@ const GeneralSettings = () => {
 
       <CompactCard>
         <CompactCardHeader>
-          <CompactCardTitle className="text-sm">{t.settings.language}</CompactCardTitle>
+          <CompactCardTitle>{t.settings.language}</CompactCardTitle>
         </CompactCardHeader>
         <CompactCardContent>
           <div className="space-y-1">
@@ -81,7 +81,7 @@ const GeneralSettings = () => {
 
       <CompactCard>
         <CompactCardHeader>
-          <CompactCardTitle className="text-sm">{t.settings.defaultModel}</CompactCardTitle>
+          <CompactCardTitle>{t.settings.defaultModel}</CompactCardTitle>
         </CompactCardHeader>
         <CompactCardContent>
           <div className="space-y-1">
