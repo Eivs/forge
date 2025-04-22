@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useCallback } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 import {
   CompactCard,
   CompactCardContent,
@@ -22,12 +22,10 @@ import {
 } from '../ui/dialog';
 import { useLanguage } from '../../locales';
 import { useToast } from '../ui/use-toast';
-import { MCPServer } from './MCPSettings';
+import { useMCPServerStore, MCPServer } from '../../store';
 
 interface MCPServerDetailProps {
-  server: MCPServer | null;
   onSave: (server: MCPServer) => Promise<void>;
-  onDelete: (serverId: string) => Promise<void>;
   onTest: (server: MCPServer) => Promise<boolean>;
 }
 
@@ -98,6 +96,35 @@ const BasicInfoForm = ({
   );
 };
 
+// 环境变量转换函数
+const envToStr = (env: Record<string, string> | undefined): string => {
+  if (env && Object.keys(env).length > 0) {
+    return Object.entries(env)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\n');
+  }
+  return '';
+};
+
+// 环境变量文本转对象函数
+const strToEnv = (text: string): Record<string, string> => {
+  const envObj: Record<string, string> = {};
+  text
+    .split('\n')
+    .filter(line => line.trim() !== '')
+    .forEach(line => {
+      const parts = line.split('=');
+      if (parts.length >= 2) {
+        const key = parts[0].trim();
+        const value = parts.slice(1).join('=').trim();
+        if (key) {
+          envObj[key] = value;
+        }
+      }
+    });
+  return envObj;
+};
+
 // STDIO 配置表单组件
 const StdioConfigForm = ({
   server,
@@ -109,63 +136,44 @@ const StdioConfigForm = ({
   disabled: boolean;
 }) => {
   const { t } = useLanguage();
+  const [formState, setFormState] = useState({
+    command: '',
+    args: '',
+    env: '',
+  });
+  const initializedRef = useRef<string | number | null>(null);
 
-  // 将状态初始化移到组件顶部
-  const [mcpArgs, setMcpArgs] = useState('');
-  const [mcpEnv, setMcpEnv] = useState('');
-  const [mcpCommand, setMcpCommand] = useState('');
-
-  // 环境变量转换函数
-  const envToStr = useCallback((env: Record<string, string> | undefined) => {
-    if (env && Object.keys(env).length > 0) {
-      return Object.entries(env)
-        .map(([key, value]) => `${key}=${value}`)
-        .join('\n');
-    }
-    return '';
-  }, []);
-
-  // 统一的初始化 effect
   useEffect(() => {
-    setMcpCommand(server.command || '');
-    setMcpArgs(server.args?.join('\n') || '');
-    setMcpEnv(server.env ? envToStr(server.env) : '');
-  }, [server.command, server.args, server.env, envToStr]);
+    if (!initializedRef.current || server.id !== initializedRef.current) {
+      setFormState({
+        command: server.command || '',
+        args: Array.isArray(server.args) ? server.args.join('\n') : '',
+        env: server.env ? envToStr(server.env) : '',
+      });
+      initializedRef.current = server.id;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [server.id]);
 
-  // 处理参数变化
+  // 处理参数修改
   const handleArgsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
-    setMcpArgs(text);
+    setFormState(prev => ({ ...prev, args: text }));
     const args = text.split('\n').filter(line => line.trim() !== '');
     onChange({ args });
   };
 
-  // 处理环境变量变化
+  // 处理环境变量修改
   const handleEnvChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
-    setMcpEnv(text);
-
-    const envObj: Record<string, string> = {};
-    text
-      .split('\n')
-      .filter(line => line.trim() !== '')
-      .forEach(line => {
-        const parts = line.split('=');
-        if (parts.length >= 2) {
-          const key = parts[0].trim();
-          const value = parts.slice(1).join('=').trim();
-          if (key) {
-            envObj[key] = value;
-          }
-        }
-      });
-    onChange({ env: envObj });
+    setFormState(prev => ({ ...prev, env: text }));
+    onChange({ env: strToEnv(text) });
   };
 
   // 处理命令变化
   const handleCommandChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value;
-    setMcpCommand(text);
+    setFormState(prev => ({ ...prev, command: text }));
     onChange({ command: text });
   };
 
@@ -179,7 +187,7 @@ const StdioConfigForm = ({
         <Input
           id="mcpCommand"
           className="h-8 text-xs"
-          value={mcpCommand}
+          value={formState.command}
           onChange={handleCommandChange}
           placeholder="uvx or npx"
           disabled={disabled}
@@ -193,7 +201,7 @@ const StdioConfigForm = ({
         <Textarea
           id="mcpArgs"
           className="h-20 text-xs"
-          value={mcpArgs}
+          value={formState.args}
           onChange={handleArgsChange}
           placeholder="arg1&#10;arg2"
           disabled={disabled}
@@ -207,7 +215,7 @@ const StdioConfigForm = ({
         <Textarea
           id="mcpEnv"
           className="h-20 text-xs"
-          value={mcpEnv}
+          value={formState.env}
           onChange={handleEnvChange}
           placeholder="KEY1=value1&#10;KEY2=value2"
           disabled={disabled}
@@ -295,12 +303,17 @@ StdioConfigForm.displayName = 'StdioConfigForm';
 SSEConfigForm.displayName = 'SSEConfigForm';
 DeleteConfirmDialog.displayName = 'DeleteConfirmDialog';
 
-const MCPServerDetail = ({ server, onSave, onDelete, onTest }: MCPServerDetailProps) => {
+const MCPServerDetail = ({ onSave, onTest }: MCPServerDetailProps) => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [editedServer, setEditedServer] = useState<MCPServer | null>(server);
-  const [isLoading, setIsLoading] = useState(false);
+  const { servers, selectedServerId, isLoading, deleteServer } = useMCPServerStore();
+  const [editedServer, setEditedServer] = useState<MCPServer | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // 获取当前选中的服务器
+  const server = selectedServerId
+    ? servers.find(s => String(s.id) === selectedServerId) || null
+    : null;
 
   useEffect(() => {
     if (server) {
@@ -325,8 +338,6 @@ const MCPServerDetail = ({ server, onSave, onDelete, onTest }: MCPServerDetailPr
   const handleSave = async () => {
     if (!editedServer) return;
 
-    setIsLoading(true);
-
     try {
       await onSave(editedServer);
     } catch (error: any) {
@@ -335,39 +346,32 @@ const MCPServerDetail = ({ server, onSave, onDelete, onTest }: MCPServerDetailPr
         description: error.message || t.mcp.error,
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleTest = async () => {
     if (!editedServer) return false;
 
-    setIsLoading(true);
-
     try {
-      // 只进行测试，不自动保存
       const success = await onTest(editedServer);
       return success;
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.error('Error testing server:', error);
+      return false;
     }
   };
 
   const confirmDelete = async () => {
     if (!editedServer) return;
-    setIsLoading(true);
     setShowDeleteConfirm(false);
     try {
-      await onDelete(String(editedServer.id));
+      await deleteServer(String(editedServer.id));
     } catch (error: any) {
       toast({
         title: t.mcp.error,
         description: error.message || t.mcp.error,
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 

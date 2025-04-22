@@ -28,6 +28,7 @@ export const useModelStore = create<ModelState>(set => ({
   defaultModel: null,
   defaultModelId: '',
 
+  // 获取所有模型
   fetchModels: async () => {
     try {
       const models = await window.electron.models.getAll();
@@ -38,6 +39,7 @@ export const useModelStore = create<ModelState>(set => ({
     }
   },
 
+  // 加载默认模型
   loadDefaultModel: async () => {
     try {
       // 获取激活的模型
@@ -69,6 +71,7 @@ export const useModelStore = create<ModelState>(set => ({
     }
   },
 
+  // 设置默认模型
   setDefaultModel: async modelId => {
     try {
       await window.electron.settings.set('defaultModelId', modelId);
@@ -80,6 +83,7 @@ export const useModelStore = create<ModelState>(set => ({
     }
   },
 
+  // 获取所有提供商
   fetchProviders: async () => {
     try {
       const providers = await window.electron.providers.getAll();
@@ -90,6 +94,7 @@ export const useModelStore = create<ModelState>(set => ({
     }
   },
 
+  // 创建模型
   createModel: async data => {
     try {
       const model = await window.electron.models.create(data);
@@ -101,6 +106,7 @@ export const useModelStore = create<ModelState>(set => ({
     }
   },
 
+  // 更新模型
   updateModel: async (id, data) => {
     try {
       const updatedModel = await window.electron.models.update(id, data);
@@ -114,6 +120,7 @@ export const useModelStore = create<ModelState>(set => ({
     }
   },
 
+  // 删除模型
   deleteModel: async id => {
     try {
       await window.electron.models.delete(id);
@@ -126,6 +133,7 @@ export const useModelStore = create<ModelState>(set => ({
     }
   },
 
+  // 设置模型的启用状态
   setModelActive: async (id, isActive) => {
     try {
       const updatedModel = await window.electron.models.setActive(id, isActive);
@@ -159,6 +167,7 @@ export const useModelStore = create<ModelState>(set => ({
     }
   },
 
+  // 创建提供商
   createProvider: async data => {
     try {
       const provider = await window.electron.providers.create(data);
@@ -170,6 +179,7 @@ export const useModelStore = create<ModelState>(set => ({
     }
   },
 
+  // 更新提供商
   updateProvider: async (id, data) => {
     try {
       const updatedProvider = await window.electron.providers.update(id, data);
@@ -185,6 +195,7 @@ export const useModelStore = create<ModelState>(set => ({
     }
   },
 
+  // 删除提供商
   deleteProvider: async id => {
     try {
       await window.electron.providers.delete(id);
@@ -197,6 +208,7 @@ export const useModelStore = create<ModelState>(set => ({
     }
   },
 
+  // 设置提供商的启用状态
   setProviderActive: async (id, isActive) => {
     try {
       const updatedProvider = await window.electron.providers.setActive(id, isActive);

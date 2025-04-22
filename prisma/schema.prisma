@@ -92,12 +92,14 @@ model MCPServer {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime?
   autoApprove     Boolean   @default(false)
-  tools           MCPServer[]
+  tools           MCPTools[]
 }
 
-model MCPServer {
+model MCPTools {
   id              Int       @id @default(autoincrement())
+  mcpServer       MCPServer @relation(fields: [mcpServerId], references: [id])
   mcpServerId     Int
+  isEnabled       Boolean   @default(true)
   name            String
   description     String?
   inPutSchema     String

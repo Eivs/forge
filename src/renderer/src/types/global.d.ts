@@ -67,6 +67,7 @@ interface Window {
       getConnectionStatus: () => Promise<'connected' | 'disconnected' | 'error'>;
       createMCPModel: (modelParams: any) => Promise<any>;
       initialize: () => Promise<{ success: boolean; message?: string }>;
+      testConnect: (serverConfig: any) => Promise<any>;
     };
 
     // MCP 服务器相关 API
