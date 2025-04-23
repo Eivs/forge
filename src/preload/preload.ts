@@ -103,8 +103,7 @@ contextBridge.exposeInMainWorld('electron', {
   mcp: {
     connect: (url: string) => ipcRenderer.invoke('mcp:connect', url),
     disconnect: () => ipcRenderer.invoke('mcp:disconnect'),
-    isConnected: () => ipcRenderer.invoke('mcp:isConnected'),
-    getConnectionStatus: () => ipcRenderer.invoke('mcp:getConnectionStatus'),
+    isAvailable: () => ipcRenderer.invoke('mcp:isAvailable'),
     createMCPModel: (modelParams: any) => ipcRenderer.invoke('mcp:createMCPModel', modelParams),
     initialize: () => ipcRenderer.invoke('mcp:initialize'),
     testConnect: (serverConfig: any) => ipcRenderer.invoke('mcp:testConnect', serverConfig),

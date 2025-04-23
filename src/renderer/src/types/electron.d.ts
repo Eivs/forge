@@ -59,8 +59,7 @@ interface ElectronAPI {
   mcp: {
     connect: (url: string) => Promise<boolean>;
     disconnect: () => Promise<void>;
-    isConnected: () => Promise<boolean>;
-    getConnectionStatus: () => Promise<'connected' | 'disconnected' | 'error'>;
+    isAvailable: () => Promise<boolean>;
     createMCPModel: (modelParams: any) => Promise<any>;
     initialize: () => Promise<any>;
     test: () => Promise<any>; // 添加测试 MCP 集成的 API

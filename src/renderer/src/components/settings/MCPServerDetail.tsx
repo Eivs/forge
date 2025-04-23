@@ -306,7 +306,7 @@ DeleteConfirmDialog.displayName = 'DeleteConfirmDialog';
 const MCPServerDetail = ({ onSave, onTest }: MCPServerDetailProps) => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const { servers, selectedServerId, isLoading, deleteServer } = useMCPServerStore();
+  const { servers, selectedServerId, isLoading, isTesting, deleteServer } = useMCPServerStore();
   const [editedServer, setEditedServer] = useState<MCPServer | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -426,26 +426,27 @@ const MCPServerDetail = ({ onSave, onTest }: MCPServerDetailProps) => {
             <Button
               onClick={handleTest}
               disabled={
-                isLoading ||
+                isTesting ||
                 (editedServer.type === 'stdio' ? !editedServer.command : !editedServer.url) ||
                 !editedServer.name
               }
               className="h-8 text-xs px-4"
               variant="outline"
             >
-              {isLoading ? t.common.loading : t.mcp.test}
+              {isTesting ? t.mcp.testing : t.mcp.test}
             </Button>
 
             <Button
               onClick={handleSave}
               disabled={
                 isLoading ||
+                isTesting ||
                 (editedServer.type === 'stdio' ? !editedServer.command : !editedServer.url) ||
                 !editedServer.name
               }
               className="h-8 text-xs px-4"
             >
-              {isLoading ? t.common.saving : t.common.save}
+              {isLoading && !isTesting ? t.common.saving : t.common.save}
             </Button>
           </div>
         </CompactCardContent>

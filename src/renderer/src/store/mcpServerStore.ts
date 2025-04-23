@@ -11,14 +11,14 @@ export interface MCPServer {
   env?: Record<string, string>;
   url?: string;
   isEnabled: boolean;
-  isConnected?: boolean;
-  connectionStatus?: string;
+  isAvailable?: boolean;
 }
 
 interface MCPServerState {
   servers: MCPServer[];
   selectedServerId: string | null;
   isLoading: boolean;
+  isTesting: boolean;
   fetchServers: () => Promise<void>;
   selectServer: (serverId: string | null) => void;
   addServer: () => void;
@@ -32,11 +32,12 @@ export const useMCPServerStore = create<MCPServerState>((set, get) => ({
   servers: [],
   selectedServerId: null,
   isLoading: false,
+  isTesting: false,
 
   // 获取所有 MCP 服务器
   fetchServers: async () => {
     try {
-      set({ isLoading: true });
+      if (!get().isLoading) set({ isLoading: true });
       const mcpServers = await window.electron.mcpServers.getAll();
 
       if (mcpServers && mcpServers.length > 0) {
@@ -47,13 +48,22 @@ export const useMCPServerStore = create<MCPServerState>((set, get) => ({
           env: server.env ? JSON.parse(server.env) : {},
         }));
 
+        // 检查当前选中的服务器是否还存在
+        let selectedId: string | null = null;
+        const currentSelectedId = get().selectedServerId;
+        if (processedServers.length > 0) {
+          const serverExists = processedServers.some(ser => String(ser.id) === currentSelectedId);
+          if (serverExists) {
+            selectedId = currentSelectedId;
+          }
+        }
+
         set({
           servers: processedServers,
-          // 如果没有选中的服务器，选择第一个
-          selectedServerId: get().selectedServerId || String(processedServers[0].id),
+          selectedServerId: selectedId,
         });
       } else {
-        set({ servers: [] });
+        set({ servers: [], selectedServerId: null });
       }
     } catch (error) {
       console.error('Error loading MCP servers:', error);
@@ -64,6 +74,7 @@ export const useMCPServerStore = create<MCPServerState>((set, get) => ({
 
   // 选择服务器
   selectServer: serverId => {
+    console.log(serverId);
     set({ selectedServerId: serverId });
   },
 
@@ -93,18 +104,20 @@ export const useMCPServerStore = create<MCPServerState>((set, get) => ({
   saveServer: async server => {
     try {
       set({ isLoading: true });
-
-      // 先测试连接
-      const isConnected = await get().testServer(server);
-      if (!isConnected) {
-        return false;
+      let testResult;
+      if (server.isEnabled && !server.isAvailable) {
+        testResult = await window.electron.mcp.testConnect(server);
+        console.log(testResult);
       }
 
       const serverData = {
         ...server,
         args: Array.isArray(server.args) ? server.args : [],
         env: typeof server.env === 'object' ? server.env : {},
+        isAvailable: testResult?.success || false,
       };
+
+      console.log(testResult);
 
       let savedServer;
       // 检查是否为临时 ID
@@ -116,48 +129,10 @@ export const useMCPServerStore = create<MCPServerState>((set, get) => ({
         savedServer = await window.electron.mcpServers.update(Number(server.id), serverData);
       }
 
-      // 更新服务器列表
-      await get().fetchServers();
-
       // 保持当前服务器选中状态
       set({ selectedServerId: String(savedServer.id) });
-
-      // 如果启用了连接，尝试连接到 MCP 服务器
-      if (server.isEnabled) {
-        if (server.type === 'sse') {
-          // 对于 SSE 类型，使用 URL
-          if (server.url) {
-            await window.electron.mcp.connect(server.url);
-            const status = await window.electron.mcp.getConnectionStatus();
-
-            // 更新服务器连接状态
-            await window.electron.mcpServers.update(Number(savedServer.id), {
-              isConnected: true,
-              connectionStatus: status,
-            });
-
-            // 重新加载服务器列表
-            await get().fetchServers();
-          }
-        } else {
-          // 对于 stdio 类型，使用命令
-          if (server.command) {
-            // 这里需要实现 stdio 类型的连接逻辑
-            // 目前只是模拟连接成功
-            await window.electron.mcpServers.update(Number(savedServer.id), {
-              isConnected: true,
-              connectionStatus: 'Connected via stdio',
-            });
-
-            // 重新加载服务器列表
-            await get().fetchServers();
-          }
-        }
-      } else {
-        // 如果禁用了连接，断开连接
-        await get().disconnect(savedServer.id.toString());
-      }
-
+      // 重新加载服务器列表
+      await get().fetchServers();
       return true;
     } catch (error) {
       console.error('Error saving MCP server:', error);
@@ -171,7 +146,14 @@ export const useMCPServerStore = create<MCPServerState>((set, get) => ({
   deleteServer: async serverId => {
     try {
       set({ isLoading: true });
+      console.log(serverId);
 
+      if (serverId?.startsWith('temp-')) {
+        set(state => ({
+          servers: state.servers.filter(s => String(s.id) !== serverId),
+        }));
+        return;
+      }
       // 先断开连接
       await get().disconnect(serverId);
 
@@ -198,34 +180,33 @@ export const useMCPServerStore = create<MCPServerState>((set, get) => ({
   // 测试服务器连接
   testServer: async server => {
     try {
-      set({ isLoading: true });
+      set({ isLoading: true, isTesting: true });
 
       // 检查是否为临时服务器（未保存到数据库）
       const isTemporaryServer = typeof server.id === 'string' && server.id.startsWith('temp-');
 
       const testResult = await window.electron.mcp.testConnect(server);
 
-      if (!testResult.success) {
-        return false;
-      }
-
       // 只有已保存的服务器才更新数据库
       if (!isTemporaryServer) {
         await window.electron.mcpServers.update(Number(server.id), {
-          isConnected: true,
-          connectionStatus: testResult.status || 'Connected',
+          isAvailable: testResult.success,
         });
-
         // 重新加载服务器列表
-        await get().fetchServers();
+        // await get().fetchServers();
       }
+      set(state => ({
+        servers: state.servers.map(s =>
+          s.id === server.id ? { ...server, isAvailable: testResult.success } : s
+        ),
+      }));
 
-      return true;
+      return testResult.success;
     } catch (error) {
       console.error('Error testing MCP server:', error);
       return false;
     } finally {
-      set({ isLoading: false });
+      set({ isLoading: false, isTesting: false });
     }
   },
 
@@ -235,12 +216,6 @@ export const useMCPServerStore = create<MCPServerState>((set, get) => ({
       set({ isLoading: true });
 
       await window.electron.mcp.disconnect();
-
-      // 更新服务器连接状态
-      await window.electron.mcpServers.update(Number(serverId), {
-        isConnected: false,
-        connectionStatus: '',
-      });
 
       // 重新加载服务器列表
       await get().fetchServers();

@@ -70,7 +70,7 @@ const ProviderList = ({ providers, selectedProviderId, onSelectProvider }: Provi
               <div
                 key={provider.id}
                 className={cn(
-                  'flex items-center justify-between py-2 px-4 rounded-md cursor-pointer transition-colors text-base',
+                  'flex items-center justify-between py-2 px-2 rounded-md cursor-pointer transition-colors text-base',
                   selectedProviderId === provider.id
                     ? 'bg-primary text-primary-foreground'
                     : 'hover:bg-accent hover:text-accent-foreground'
@@ -78,8 +78,8 @@ const ProviderList = ({ providers, selectedProviderId, onSelectProvider }: Provi
                 onClick={() => onSelectProvider(provider)}
               >
                 <div className="flex items-center">
-                  <GlobeIcon className="h-3 w-3 mr-1 opacity-70" />
-                  <span className="text-base">{provider.name}</span>
+                  <GlobeIcon className="h-3 w-3 mr-2 opacity-70" />
+                  <span className="text-base line-clamp-2 w-36">{provider.name}</span>
                 </div>
                 {provider.isActive && <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>}
               </div>

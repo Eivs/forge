@@ -51,8 +51,7 @@ declare global {
       mcp: {
         connect: (url: string) => Promise<boolean>;
         disconnect: () => Promise<void>;
-        isConnected: () => Promise<boolean>;
-        getConnectionStatus: () => Promise<string>;
+        isAvailable: () => Promise<boolean>;
         createMCPModel: (modelParams: any) => Promise<any>;
       };
       mcpServers: {

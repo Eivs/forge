@@ -61,8 +61,7 @@ declare global {
       mcp: {
         connect: (url: string) => Promise<void>;
         disconnect: () => Promise<void>;
-        isConnected: () => Promise<boolean>;
-        getConnectionStatus: () => Promise<string>;
+        isAvailable: () => Promise<boolean>;
         createMCPModel: (modelParams: any) => Promise<{ success: boolean }>;
         initialize: () => Promise<{ success: boolean; message?: string }>;
       };

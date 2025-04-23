@@ -111,6 +111,7 @@ export default {
     noServersConfigured: 'No MCP servers configured',
     selectServer: 'Select a server',
     test: 'Test Connection',
+    testing: 'Testing...',
     testSuccess: 'Connection test successful',
     testSuccessDesc: 'Successfully connected to MCP server',
     testFailed: 'Connection test failed',

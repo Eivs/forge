@@ -108,6 +108,7 @@ export default {
     noServersConfigured: '没有配置 MCP 服务器',
     selectServer: '选择一个服务器',
     test: '测试连接',
+    testing: '测试中...',
     testSuccess: '连接测试成功',
     testSuccessDesc: '成功连接到 MCP 服务器',
     testFailed: '连接测试失败',

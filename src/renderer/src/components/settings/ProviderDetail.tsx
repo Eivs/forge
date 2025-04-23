@@ -164,14 +164,14 @@ const ProviderDetail = ({ provider, onBack }: ProviderDetailProps) => {
         <Button variant="ghost" size="icon" onClick={onBack} className="md:hidden">
           <ArrowLeftIcon className="h-3 w-3" />
         </Button>
-        <h2 className="text-base font-medium">{provider.name}</h2>
+        <h2 className="text-base font-medium">{t.provider.provider}</h2>
       </div>
 
       {/* Provider Card */}
       <CompactCard>
         <CompactCardHeader>
           <div className="flex justify-between items-center">
-            <CompactCardTitle>{t.provider.provider}</CompactCardTitle>
+            <CompactCardTitle>{provider.name}</CompactCardTitle>
             <div className="flex items-center space-x-1">
               <Switch checked={provider.isActive} onCheckedChange={handleToggleProviderActive} />
               <Button

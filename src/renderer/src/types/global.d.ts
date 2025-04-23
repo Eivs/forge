@@ -63,8 +63,7 @@ interface Window {
     mcp: {
       connect: (url: string) => Promise<boolean>;
       disconnect: () => Promise<void>;
-      isConnected: () => Promise<boolean>;
-      getConnectionStatus: () => Promise<'connected' | 'disconnected' | 'error'>;
+      isAvailable: () => Promise<boolean>;
       createMCPModel: (modelParams: any) => Promise<any>;
       initialize: () => Promise<{ success: boolean; message?: string }>;
       testConnect: (serverConfig: any) => Promise<any>;

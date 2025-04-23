@@ -87,8 +87,6 @@ model MCPServer {
   url             String?
   isEnabled       Boolean   @default(true)
   isAvailable     Boolean   @default(false)
-  isConnected     Boolean   @default(false)
-  connectionStatus String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime?
   autoApprove     Boolean   @default(false)

@@ -193,150 +193,81 @@ async function initializeMultiServerClient() {
   }
 }
 
-// /**
-//  * 测试 MCP 集成
-//  * @returns 测试结果
-//  */
-// async function testMCPIntegration() {
-//   try {
-//     // 检查是否已连接
-//     if (!sseClient && !multiServerClient) {
-//       throw new Error('MCP client not connected');
-//     }
-
-//     // 获取工具列表
-//     const tools =
-//       mcpTools.length > 0 ? mcpTools : multiServerClient ? await multiServerClient.getTools() : [];
-
-//     if (tools.length === 0) {
-//       throw new Error('No MCP tools available');
-//     }
-
-//     return {
-//       success: true,
-//       toolCount: tools.length,
-//       tools: tools.map(t => t.name),
-//     };
-//   } catch (error: any) {
-//     console.error('MCP integration test failed:', error);
-//     return {
-//       success: false,
-//       error: error.message || 'Unknown error',
-//     };
-//   }
-// }
-
 export function setupMCPHandlers() {
   // 测试 MCP 连接
   ipcMain.handle('mcp:testConnect', async (_: IpcMainInvokeEvent, serverConfig: any) => {
+    let testClient;
     try {
-      // 检查服务器类型
-      const serverType = serverConfig.type;
+      const { type: serverType, url, command, args = [], env = {} } = serverConfig;
+
+      if (!serverType) {
+        throw new Error('Server type is required');
+      }
+
+      // 创建测试客户端
+      testClient = new Client({
+        name: 'forge-ai-assistant-test',
+        version: '1.0.0',
+      });
+
+      let transport;
 
       if (serverType === 'sse') {
-        // SSE 模式测试
-        const url = serverConfig.url;
         if (!url) {
           throw new Error('URL is required for SSE server');
         }
-
         console.log(`Testing connection to SSE MCP server at ${url}`);
-
-        // 创建临时 SSE 客户端进行测试
-        const transport = new SSEClientTransport(new URL(url));
-
-        // 初始化客户端
-        const testClient = new Client({
-          name: 'forge-ai-assistant-test',
-          version: '1.0.0',
-        });
-
-        // 连接到服务器
-        await testClient.connect(transport);
-        const mcpServer = (await testClient.listTools()) || [];
-
-        // 如果成功连接，关闭测试客户端
-        await testClient.close();
-
-        return {
-          success: true,
-          status: 'SSE connection successful',
-          tools: mcpServer.tools,
-        };
+        transport = new SSEClientTransport(new URL(url));
       } else if (serverType === 'stdio') {
-        // stdio 模式测试
-        const command = serverConfig.command;
         if (!command) {
           throw new Error('Command is required for stdio server');
         }
 
-        console.log(`Testing connection to stdio MCP server with command: ${command}`);
-
-        // 解析参数和环境变量
-        const args = Array.isArray(serverConfig.args) ? serverConfig.args : [];
-        const env = prepareEnvironment(
-          typeof serverConfig.env === 'object' ? serverConfig.env : {}
-        );
-
-        // 如果命令是 npx 或 uvx，确保使用完整路径
         const finalCommand = ['npx', 'uvx'].includes(command)
           ? getExecutablePath(command, command)
           : command;
 
-        // 创建 StdioClientTransport 进行测试
-        console.log(
-          'Testing stdio server with command:',
-          finalCommand,
-          '\nargs:',
-          args,
-          '\nenv:',
-          env
-        );
+        const preparedEnv = prepareEnvironment(env);
 
-        // 创建客户端并测试连接
-        const transport = new StdioClientTransport({
+        console.log('Testing stdio server with:', {
           command: finalCommand,
           args,
-          env,
+          env: preparedEnv,
         });
 
-        // 初始化客户端
-        const testClient = new Client({
-          name: 'forge-ai-assistant-test',
-          version: '1.0.0',
+        transport = new StdioClientTransport({
+          command: finalCommand,
+          args,
+          env: preparedEnv,
         });
-
-        try {
-          // 连接到服务器
-          await testClient.connect(transport);
-          const mcpServer = (await testClient.listTools()) || [];
-
-          // 如果成功连接，关闭测试客户端
-          await testClient.close();
-
-          return {
-            success: true,
-            status: 'stdio connection successful',
-            tools: mcpServer.tools,
-          };
-        } catch (error) {
-          // 确保关闭客户端
-          try {
-            await testClient.close();
-          } catch (closeError) {
-            console.warn('Error closing test client:', closeError);
-          }
-          throw error;
-        }
       } else {
         throw new Error(`Unsupported server type: ${serverType}`);
       }
+
+      // 统一的连接测试逻辑
+      await testClient.connect(transport);
+      const mcpServer = (await testClient.listTools()) || [];
+
+      return {
+        success: true,
+        status: `${serverType} connection successful`,
+        tools: mcpServer.tools,
+      };
     } catch (error: any) {
       console.error('Error testing connection to MCP server:', error);
       return {
         success: false,
         error: error.message || 'Failed to connect to MCP server',
       };
+    } finally {
+      // 确保在任何情况下都尝试关闭客户端
+      if (testClient) {
+        try {
+          await testClient.close();
+        } catch (closeError) {
+          console.warn('Error closing test client:', closeError);
+        }
+      }
     }
   });
 
@@ -407,14 +338,9 @@ export function setupMCPHandlers() {
     }
   });
 
-  // 检查是否已连接到 MCP 服务器
-  ipcMain.handle('mcp:isConnected', () => {
+  // 检查 MCP 服务器状态
+  ipcMain.handle('mcp:isAvailable', () => {
     return (!!sseClient || !!multiServerClient) && connectionStatus === 'connected';
-  });
-
-  // 获取 MCP 连接状态
-  ipcMain.handle('mcp:getConnectionStatus', () => {
-    return connectionStatus;
   });
 
   // 创建使用 MCP 上下文的 LLM

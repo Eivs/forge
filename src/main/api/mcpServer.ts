@@ -7,7 +7,7 @@ export function setupMCPServerHandlers() {
     const prisma = getDatabase();
     return prisma.mCPServer.findMany({
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'asc',
       },
     });
   });
@@ -38,8 +38,7 @@ export function setupMCPServerHandlers() {
         env,
         url: data.url,
         isEnabled: data.isEnabled !== false,
-        isConnected: data.isConnected || false,
-        connectionStatus: data.connectionStatus,
+        isAvailable: data.isAvailable || false,
       },
     });
 

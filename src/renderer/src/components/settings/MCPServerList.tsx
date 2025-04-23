@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Button } from '../ui/button';
-import { PlusIcon } from '@radix-ui/react-icons';
+import { PlusIcon, ArchiveIcon } from '@radix-ui/react-icons';
 import { useLanguage } from '../../locales';
 import { cn } from '../../lib/utils';
 import { useMCPServerStore, MCPServer } from '../../store';
@@ -21,15 +21,21 @@ const ServerItem = memo(
     return (
       <button
         className={cn(
-          'w-full text-left px-3 py-2 rounded-md transition-colors text-xs',
+          'flex items-center justify-between w-full py-2 px-2 rounded-md cursor-pointer transition-colors text-xs text-left',
           isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
         )}
         onClick={() => onSelect(server.id.toString())}
       >
-        <div className="font-medium">{server.name}</div>
-        <div className="text-xs opacity-80">
-          {server.type === 'stdio' ? t.mcp.stdioType : t.mcp.sseType}
+        <ArchiveIcon className="h-3 w-3 mr-2 opacity-70" />
+        <div className="flex flex-col flex-1 w-36 space-y-1">
+          <div className="font-medium line-clamp-1">{server.name}</div>
+          <span className="text-xs opacity-80">
+            {server.type === 'stdio' ? t.mcp.stdioType : t.mcp.sseType}
+          </span>
         </div>
+        {server.isEnabled && server.isAvailable && (
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+        )}
       </button>
     );
   }
