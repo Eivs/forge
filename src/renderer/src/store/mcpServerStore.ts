@@ -74,7 +74,6 @@ export const useMCPServerStore = create<MCPServerState>((set, get) => ({
 
   // 选择服务器
   selectServer: serverId => {
-    console.log(serverId);
     set({ selectedServerId: serverId });
   },
 
@@ -133,6 +132,7 @@ export const useMCPServerStore = create<MCPServerState>((set, get) => ({
       set({ selectedServerId: String(savedServer.id) });
       // 重新加载服务器列表
       await get().fetchServers();
+      await window.electron.mcp.initialize();
       return true;
     } catch (error) {
       console.error('Error saving MCP server:', error);
