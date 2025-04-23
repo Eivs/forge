@@ -1,23 +1,34 @@
 import { MultiServerMCPClient } from '@langchain/mcp-adapters';
 import { ChatOpenAI } from '@langchain/openai';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
-
+import { randomUUID } from 'crypto';
 /**
  * 测试 MCP 集成
  * 这个文件包含一个简单的测试函数，用于验证 MCP 集成是否正常工作
  */
 
 // 测试配置
+// const apiKey = 'sk-';
+// const baseURL = 'https://openapi.coreshub.cn/v1';
+// const modelName = 'DeepSeek-V3';
 const apiKey = 'sk-';
-const baseURL = 'https://openapi.coreshub.cn/v1';
-const modelName = 'DeepSeek-V3';
+const baseURL = 'https://api.deepseek.com/v1';
+const modelName = 'deepseek-chat';
+
+
+
+const abortControllers = new Map();
 
 // MCP 服务器配置
 const mcpServers = {
   math: {
     transport: 'stdio',
     command: 'npx',
-    args: ['-y', '@playwright/mcp@latest'],
+    args: ['-y', 'tavily-mcp'],
+    env: {
+      'TAVILY_API_KEY': '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',
+      PATH: process.env.PATH,
+    },
     restart: {
       enabled: true,
       maxAttempts: 3,
@@ -27,7 +38,7 @@ const mcpServers = {
 };
 
 // 初始化 MCP 客户端
-function initMCPClient(mcpServers: any) {
+function initMCPClient(mcpServers) {
   try {
     // 创建客户端并连接到服务器
     const client = new MultiServerMCPClient({
@@ -40,7 +51,7 @@ function initMCPClient(mcpServers: any) {
       additionalToolNamePrefix: 'mcp',
       mcpServers,
     });
-
+    console.log(client);
     return client;
   } catch (error) {
     console.error('Initialize MCPClient failed:', error);
@@ -49,7 +60,7 @@ function initMCPClient(mcpServers: any) {
 }
 
 // 获取 MCP 工具
-async function getTools(mcpServers: any) {
+async function getTools(mcpServers) {
   try {
     const client = initMCPClient(mcpServers);
     const tools = await client.getTools();
@@ -77,7 +88,7 @@ export async function testMCPIntegration() {
       modelName: modelName,
       temperature: 0.7,
       topP: 0.9,
-      streaming: false,
+      streaming: true,
       openAIApiKey: apiKey,
       apiKey,
       timeout: 15000,
@@ -102,15 +113,23 @@ export async function testMCPIntegration() {
       llm: model,
       tools,
     });
+    const abortController = new AbortController();
+    const requestId = randomUUID();
+    abortControllers.set(requestId, abortController);
 
     // 运行代理
     console.log('Running agent...');
-    const response = await agent.invoke({
-      messages: [{ role: 'user', content: '用浏览器打开青云控制台，查看青云控制台的使用说明' }],
-    });
-
+    const response = await agent.stream({
+      messages: [{ role: 'user', content: '今天有什么科技新闻？' }],
+    }, {
+          signal: abortController.signal,
+        });
+    // const response = await agent.invoke({
+    //   messages: [{ role: 'user', content: '今天有什么科技新闻？' }],
+    // });
+    console.log(response);
     // 记录完整响应
-    console.log('Agent response:', JSON.stringify(response, null, 2));
+    // console.log('Agent response:', JSON.stringify(response, null, 2));
 
     // 提取助手消息
     let assistantMessage = '';
@@ -140,15 +159,18 @@ export async function testMCPIntegration() {
       response,
       assistantMessage,
     };
+    await client.close();
   } catch (error) {
     console.error('Error during agent execution:', error);
     // 工具抛出 ToolException 表示工具特定错误
-    if ((error as any).name === 'ToolException') {
-      console.error('Tool execution failed:', (error as any).message);
+    if (error.name === 'ToolException') {
+      console.error('Tool execution failed:', error.message);
     }
     return { success: false, error };
   }
 }
+
+await testMCPIntegration();
 
 // 导出测试函数
 export default testMCPIntegration;

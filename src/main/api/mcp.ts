@@ -8,8 +8,7 @@ import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 
 // 全局 MCP 客户端实例
-let multiServerClient: MultiServerMCPClient | null = null;
-let sseClient: Client | null = null;
+let MCPClient: MultiServerMCPClient | null = null;
 let connectionStatus: 'connected' | 'disconnected' | 'error' = 'disconnected';
 let mcpTools: any[] = [];
 
@@ -77,13 +76,14 @@ function prepareEnvironment(env: Record<string, string> = {}): Record<string, st
 }
 
 // 初始化 MCP 客户端
-async function initializeMultiServerClient() {
+async function initializeMCPClient() {
   try {
     // 获取所有启用的 MCP 服务器
     const prisma = getDatabase();
     const mcpServers = await prisma.mCPServer.findMany({
       where: {
         isEnabled: true,
+        isAvailable: true,
       },
     });
 
@@ -92,12 +92,10 @@ async function initializeMultiServerClient() {
       return null;
     }
 
-    // 初始化配置
-
     // 构建 MultiServerMCPClient 配置
     const mcpConfig: any = {
       // 全局工具配置选项
-      throwOnLoadError: false, // 改为 false 以避免单个服务器错误导致整个客户端失败
+      throwOnLoadError: false, // 以避免单个服务器错误导致整个客户端失败
       prefixToolNameWithServerName: true,
       additionalToolNamePrefix: 'mcp',
       mcpServers: {},
@@ -271,61 +269,13 @@ export function setupMCPHandlers() {
     }
   });
 
-  // 连接到 MCP 服务器 (SSE 模式)
-  ipcMain.handle('mcp:connect', async (_: IpcMainInvokeEvent, url: string) => {
-    try {
-      // 断开现有连接
-      if (sseClient) {
-        await sseClient.close();
-        sseClient = null;
-      }
-
-      console.log(`Connecting to MCP server at ${url}`);
-
-      // 创建 SSE 客户端
-      const transport = new SSEClientTransport(new URL(url));
-
-      // 初始化客户端
-      sseClient = new Client({
-        name: 'forge-ai-assistant',
-        version: '1.0.0',
-      });
-
-      // 连接到服务器
-      await sseClient.connect(transport);
-
-      // 加载工具
-      const tools = await loadMcpTools('sse-server', sseClient, {
-        throwOnLoadError: true,
-        prefixToolNameWithServerName: true,
-        additionalToolNamePrefix: 'mcp',
-      });
-
-      // 添加到全局工具列表
-      mcpTools = [...mcpTools, ...tools];
-
-      connectionStatus = 'connected';
-      return true;
-    } catch (error: any) {
-      console.error('Error connecting to MCP server:', error);
-      connectionStatus = 'error';
-      throw error;
-    }
-  });
-
   // 断开 MCP 服务器连接
   ipcMain.handle('mcp:disconnect', async () => {
     try {
-      // 断开 SSE 客户端连接
-      if (sseClient) {
-        await sseClient.close();
-        sseClient = null;
-      }
-
       // 断开 MultiServerMCPClient 连接
-      if (multiServerClient) {
-        await multiServerClient.close();
-        multiServerClient = null;
+      if (MCPClient) {
+        await MCPClient.close();
+        MCPClient = null;
       }
 
       // 清空工具列表
@@ -340,42 +290,19 @@ export function setupMCPHandlers() {
 
   // 检查 MCP 服务器状态
   ipcMain.handle('mcp:isAvailable', () => {
-    return (!!sseClient || !!multiServerClient) && connectionStatus === 'connected';
-  });
-
-  // 创建使用 MCP 上下文的 LLM
-  ipcMain.handle('mcp:createMCPModel', async (_: IpcMainInvokeEvent, _modelParams: any) => {
-    if (!sseClient && !multiServerClient) {
-      // 尝试初始化 MultiServerMCPClient
-      multiServerClient = await initializeMultiServerClient();
-
-      if (!multiServerClient) {
-        throw new Error('MCP client not connected');
-      }
-
-      // 加载工具
-      mcpTools = await multiServerClient.getTools();
-    }
-
-    try {
-      // 返回工具列表，供 LLM API 使用
-      return {
-        success: true,
-        tools: mcpTools,
-      };
-    } catch (error: any) {
-      console.error('Error creating MCP model:', error);
-      throw error;
-    }
+    return !!MCPClient && connectionStatus === 'connected';
   });
 
   // 初始化 MCP 客户端
   ipcMain.handle('mcp:initialize', async () => {
     try {
+      if (MCPClient) {
+        MCPClient.close();
+      }
       // 初始化 MultiServerMCPClient
-      multiServerClient = await initializeMultiServerClient();
+      MCPClient = await initializeMCPClient();
 
-      if (multiServerClient) {
+      if (MCPClient) {
         return { success: true };
       } else {
         return { success: false, message: 'No enabled MCP servers found' };
@@ -393,11 +320,8 @@ export function getMCPTools() {
 }
 
 // 导出 MultiServerMCPClient 实例，供其他模块使用
-export function getMultiServerClient() {
-  return multiServerClient;
+export function getMCPClient() {
+  return MCPClient;
 }
 
-// 导出 SSE 客户端实例，供其他模块使用
-export function getSSEClient() {
-  return sseClient;
-}
+initializeMCPClient();

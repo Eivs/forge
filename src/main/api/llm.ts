@@ -131,14 +131,14 @@ function formatMessagesForLLM(messages: any[]) {
     // 转换为 LangChain 消息格式
     switch (msg.role) {
       case 'user':
-        return new HumanMessage(msg.content);
+        return new HumanMessage(msg);
       case 'assistant':
-        return new AIMessage(msg.content);
+        return new AIMessage(msg);
       case 'system':
-        return new SystemMessage(msg.content);
+        return new SystemMessage(msg);
       default:
         console.warn(`Unknown message role: ${msg.role}, treating as human`);
-        return new HumanMessage(msg.content);
+        return new HumanMessage(msg);
     }
   });
 
@@ -268,12 +268,19 @@ export function setupLLMHandlers() {
     try {
       const model = await getLLMModel(modelId, temperature, topP, maxTokens, true, useMCP);
       console.log(`Got model for streaming:`, model);
+      console.log(`Formatted messages:`, messages);
       const formattedMessages = formatMessagesForLLM(messages);
 
       // 使用中止信号创建流
-      const stream = await model.stream(formattedMessages as any, {
-        signal: abortController.signal,
-      });
+      // const stream = await model.stream(formattedMessages as any, {
+      //   signal: abortController.signal,
+      // });
+      const stream = await model.stream(
+        { messages: messages },
+        {
+          signal: abortController.signal,
+        }
+      );
 
       let fullContent = '';
 
